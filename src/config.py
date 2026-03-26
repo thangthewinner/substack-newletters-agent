@@ -52,13 +52,13 @@ class QdrantSettings(BaseModel):
         default="substack_collection", description="Qdrant collection name"
     )
     dense_model_name: str = Field(
-        default="BAAI/bge-base-en", description="Dense model name"
+        default="intfloat/multilingual-e5-large", description="Dense model name"
     )
     sparse_model_name: str = Field(
         default="Qdrant/bm25", description="Sparse model name"
     )  # prithivida/Splade_PP_en_v1 (larger)
     vector_dim: int = Field(
-        default=768,
+        default=1024,
         description="Vector dimension",  # 768, 1024 with Jina or large HF
     )
     article_batch_size: int = Field(
