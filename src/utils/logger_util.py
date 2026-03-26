@@ -57,7 +57,8 @@ def log_batch_status(
     total_chunks: int | None = None,
     context: str = "",
 ) -> str:
-    """Log batch action details along with current process and system memory usage.
+    """
+    Log batch action details along with current process and system memory usage.
 
     Args:
         logger (Any): Logger instance to use (Prefect or Loguru).
@@ -69,7 +70,6 @@ def log_batch_status(
 
     Returns:
         str: Formatted log string (useful for testing).
-
     """
     process = psutil.Process()
     mem = process.memory_info()

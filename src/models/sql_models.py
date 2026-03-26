@@ -15,7 +15,8 @@ class Base(DeclarativeBase):
 
 
 class SubstackArticle(Base):
-    """SQLAlchemy model representing a Substack newsletter article.
+    """
+    SQLAlchemy model representing a Substack newsletter article.
 
     Stores article metadata and content fetched from RSS feeds.
     Each article is uniquely identified by its URL and has a generated UUID.

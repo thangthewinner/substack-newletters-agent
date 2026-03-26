@@ -17,7 +17,8 @@ from src.utils.logger_util import setup_logging
     retry_delay_seconds=120,
 )
 def rss_ingest_flow(article_model: type[SubstackArticle] = SubstackArticle) -> None:
-    """Fetch and ingest articles from configured RSS feeds concurrently.
+    """
+    Fetch and ingest articles from configured RSS feeds concurrently.
 
     Each feed is fetched in parallel and ingested into the database
     with error handling at each stage. Ensures the database engine is disposed

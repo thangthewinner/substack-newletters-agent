@@ -32,7 +32,8 @@ from src.utils.text_splitter import TextSplitter
 
 
 class AsyncQdrantVectorStore:
-    """Manages asynchronous interactions with Qdrant vector store for article ingestion.
+    """
+    Manages asynchronous interactions with Qdrant vector store for article ingestion.
 
     Initializes Qdrant client, embedding models, and configurations for dense and sparse
     vector storage. Handles collection creation, indexing, and ingestion from SQL.
@@ -52,7 +53,6 @@ class AsyncQdrantVectorStore:
         vector_db = settings.qdrant
 
         # Models & configs
-
         self.dense_model = TextEmbedding(
             model_name=vector_db.dense_model_name,
             cache_dir=cache_dir,  # Only uses cache_dir if provided
@@ -69,7 +69,6 @@ class AsyncQdrantVectorStore:
         self.max_concurrent = vector_db.max_concurrent
 
         # Qdrant client & collection
-
         self.client = AsyncQdrantClient(url=vector_db.url, api_key=vector_db.api_key)
         self.collection_name = vector_db.collection_name
         self.splitter = TextSplitter()
@@ -85,17 +84,14 @@ class AsyncQdrantVectorStore:
         )
 
         # Logging
-
         self.logger = setup_logging()
         self.log_batch_status = partial(log_batch_status, self.logger)
 
         # Jina settings (optional)
-
         self.jina_settings = settings.jina
         self.use_jina = False  # Set to True to enable Jina integration
 
         # Hugging Face settings (optional)
-
         self.hugging_face_settings = settings.hugging_face
 
         self.hf_client = InferenceClient(
@@ -106,9 +102,9 @@ class AsyncQdrantVectorStore:
         self.use_hf = False  # Set to True to enable HF integration
 
     # Collection management
-
     async def create_collection(self) -> None:
-        """Create Qdrant collection if it does not exist.
+        """
+        Create Qdrant collection if it does not exist.
 
         Checks for existing collection and creates a new one with dense and sparse vector
         configurations if needed. Logs errors and skips if collection exists.
@@ -168,7 +164,8 @@ class AsyncQdrantVectorStore:
             raise RuntimeError("Error creating Qdrant collection") from e
 
     async def delete_collection(self) -> None:
-        """Delete Qdrant collection after user confirmation.
+        """
+        Delete Qdrant collection after user confirmation.
 
         Prompts user to confirm deletion to prevent accidental data loss. Logs errors and
         skips if canceled.
@@ -207,7 +204,8 @@ class AsyncQdrantVectorStore:
     # Update collection to enable HNSW
 
     async def enable_hnsw(self, m: int = 16, indexing_threshold: int = 20000) -> None:
-        """Enable HNSW indexing for the Qdrant collection.
+        """
+        Enable HNSW indexing for the Qdrant collection.
 
         Updates collection to enable HNSW graph with specified parameters.
 
@@ -254,7 +252,8 @@ class AsyncQdrantVectorStore:
     # Indexes
 
     async def create_feed_author_index(self) -> None:
-        """Create keyword index for feed_author field.
+        """
+        Create keyword index for feed_author field.
 
         Returns:
             None
@@ -285,7 +284,8 @@ class AsyncQdrantVectorStore:
             raise RuntimeError("Error creating feed_author index") from e
 
     async def create_article_authors_index(self) -> None:
-        """Create keyword index for article_authors field.
+        """
+        Create keyword index for article_authors field.
 
         Returns:
             None
@@ -316,7 +316,8 @@ class AsyncQdrantVectorStore:
             raise RuntimeError("Error creating article_authors index") from e
 
     async def create_article_feed_name_index(self) -> None:
-        """Create keyword index for feed_name field.
+        """
+        Create keyword index for feed_name field.
 
         Returns:
             None
@@ -347,7 +348,8 @@ class AsyncQdrantVectorStore:
             raise RuntimeError("Error creating feed_name index") from e
 
     async def create_title_index(self) -> None:
-        """Create text index for title field with Snowball stemmer.
+        """
+        Create text index for title field with Snowball stemmer.
 
         Returns:
             None
@@ -382,9 +384,9 @@ class AsyncQdrantVectorStore:
             raise RuntimeError("Error creating title index") from e
 
     # Embeddings
-
     def jina_dense_vectors(self, texts: list[str]) -> list[list[float]]:
-        """Generate dense vectors using Jina API.
+        """
+        Generate dense vectors using Jina API.
 
         Args:
             texts (list[str]): List of text strings to embed.
@@ -420,7 +422,8 @@ class AsyncQdrantVectorStore:
             raise
 
     def hf_dense_vectors(self, texts: list[str]) -> list[list[float]]:
-        """Generate dense vectors using Hugging Face Inference API.
+        """
+        Generate dense vectors using Hugging Face Inference API.
 
         Args:
             texts (list[str]): List of text strings to embed.
@@ -443,7 +446,8 @@ class AsyncQdrantVectorStore:
             raise
 
     def dense_vectors(self, texts: list[str]) -> list[list[float]]:
-        """Generate dense vectors using configured model (Jina, Hugging Face, or local).
+        """
+        Generate dense vectors using configured model (Jina, Hugging Face, or local).
 
         Args:
             texts (list[str]): List of text strings to embed.
@@ -466,7 +470,8 @@ class AsyncQdrantVectorStore:
             raise
 
     def sparse_vectors(self, texts: list[str]) -> list[SparseVector]:
-        """Generate sparse vectors using sparse embedding model.
+        """
+        Generate sparse vectors using sparse embedding model.
 
         Args:
             texts (list[str]): List of text strings to embed.
@@ -490,45 +495,11 @@ class AsyncQdrantVectorStore:
             raise
 
     # Embedding helpers (memory-efficient)
-
-    # async def embed_batch_async(
-    #     self, texts: list[str]
-    # ) -> tuple[list[list[float]], list[SparseVector]]:
-    #     """Generate dense and sparse embeddings concurrently for a batch of texts.
-
-    #     Args:
-    #         texts (list[str]): List of text strings to embed.
-
-    #     Returns:
-    #         tuple[list[list[float]], list[SparseVector]]: Dense and sparse embeddings.
-
-    #     Raises:
-    #         RuntimeError: If embedding generation fails.
-    #     """
-    #     try:
-    #         # Run embeddings concurrently in threads
-    #         dense_task = asyncio.to_thread(self.dense_model.embed, texts)
-    #         sparse_task = asyncio.to_thread(
-    #             self.sparse_model.embed, texts, batch_size=self.sparse_batch_size
-    #         )
-    #         dense_result, sparse_result = await asyncio.gather(dense_task, sparse_task)
-
-    #         # Convert to upsert-friendly format
-    #         dense_vecs = [vec.tolist() for vec in dense_result]
-    #         sparse_vecs = [SparseVector(indices=se.indices.tolist(),
-    #                                      values=se.values.tolist()) for se in sparse_result]
-
-    #         # Free memory
-    #         del dense_result, sparse_result
-    #         return dense_vecs, sparse_vecs
-    #     except Exception as e:
-    #         self.logger.error(f"Failed to generate embeddings: {e}")
-    #         raise RuntimeError("Error generating batch embeddings") from e
-
     async def embed_batch_async(
         self, texts: list[str]
     ) -> tuple[list[list[float]], list[SparseVector]]:
-        """Generate dense and sparse embeddings concurrently for a batch of texts.
+        """
+        Generate dense and sparse embeddings concurrently for a batch of texts.
 
         Args:
             texts (list[str]): List of text strings to embed.
@@ -570,7 +541,8 @@ class AsyncQdrantVectorStore:
     async def _article_batch_generator(
         self, session: Session, from_date: datetime | None = None
     ) -> AsyncGenerator[list[SubstackArticle], None]:
-        """Yield batches of articles from SQL database.
+        """
+        Yield batches of articles from SQL database.
 
         Args:
             session (Session): SQLAlchemy session for querying articles.
@@ -696,7 +668,6 @@ class AsyncQdrantVectorStore:
                     total_articles += 1
 
                 # Process all chunks in batches
-
                 for start in range(0, len(all_chunks), self.upsert_batch_size):
                     sub_chunks = all_chunks[start : start + self.upsert_batch_size]
                     sub_ids: list[int | str] = all_ids[
@@ -720,7 +691,6 @@ class AsyncQdrantVectorStore:
                     total_chunks += len(sub_chunks)
 
                     # Throughput logging
-
                     batch_elapsed = time.time() - batch_start_time
                     batch_speed = (
                         len(sub_chunks) / batch_elapsed if batch_elapsed > 0 else 0
@@ -750,7 +720,6 @@ class AsyncQdrantVectorStore:
                     gc.collect()
 
             # Final cumulative average
-
             final_elapsed = time.time() - start_time
             final_speed = total_chunks / final_elapsed if final_elapsed > 0 else 0
             self.logger.info(

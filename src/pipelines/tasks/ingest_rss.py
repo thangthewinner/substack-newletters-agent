@@ -23,7 +23,8 @@ def ingest_from_rss(
     article_model: type[SubstackArticle],
     engine: Engine,
 ) -> None:
-    """Ingest articles fetched from RSS (already Markdownified).
+    """
+    Ingest articles fetched from RSS (already Markdownified).
 
     Articles are inserted in batches to optimize database writes. Errors during
     ingestion of individual batches are logged but do not stop subsequent batches.

@@ -4,7 +4,8 @@ from pydantic import BaseModel, Field, HttpUrl
 
 
 class ArticleChunkPayload(BaseModel):
-    """Pydantic model for article chunk metadata stored in Qdrant.
+    """
+    Pydantic model for article chunk metadata stored in Qdrant.
 
     This model defines the payload structure for each vector point in Qdrant,
     containing both the original article metadata and the chunk-specific data.

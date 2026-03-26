@@ -7,7 +7,8 @@ logger = setup_logging()
 
 
 async def main() -> None:
-    """Delete the Qdrant collection.
+    """
+    Delete the Qdrant collection.
 
     Initializes an AsyncQdrantVectorStore and deletes its associated collection.
     Logs errors and ensures proper execution.

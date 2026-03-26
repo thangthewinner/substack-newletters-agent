@@ -9,7 +9,8 @@ logger = setup_logging()
 
 
 async def main() -> None:
-    """Ingest articles from Supabase Postgres to Qdrant vector store.
+    """
+    Ingest articles from Supabase Postgres to Qdrant vector store.
 
     Initializes a SQLAlchemy engine and session to connect to Supabase Postgres,
     and an AsyncQdrantVectorStore to ingest articles from a specified date into

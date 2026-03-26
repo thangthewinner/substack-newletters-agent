@@ -7,7 +7,8 @@ logger = setup_logging()
 
 
 async def main() -> None:
-    """Create a Qdrant collection asynchronously using AsyncQdrantVectorStore.
+    """
+    Create a Qdrant collection asynchronously using AsyncQdrantVectorStore.
 
     This function initializes an AsyncQdrantVectorStore instance and calls its
     create_collection method to set up a Qdrant collection for vector storage.

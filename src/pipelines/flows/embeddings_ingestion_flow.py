@@ -13,7 +13,8 @@ from src.utils.logger_util import setup_logging
 
 
 async def get_last_successful_run(flow_name: str) -> datetime | None:
-    """Get the start time of the last successfully completed run for a given flow.
+    """
+    Get the start time of the last successfully completed run for a given flow.
 
     Queries the Prefect API for recent completed runs of the exact flow `flow_name`.
     Returns the start time of the most recent completed run, or None if no runs exist.
@@ -83,12 +84,13 @@ async def get_last_successful_run(flow_name: str) -> datetime | None:
 @flow(
     name="qdrant_ingest_flow",
     flow_run_name="qdrant_ingest_flow_run",
-    description="Orchestrates SQL → Qdrant ingestion",
+    description="Orchestrates SQL -> Qdrant ingestion",
     retries=2,
     retry_delay_seconds=120,
 )
 async def qdrant_ingest_flow(from_date: str | None = None) -> None:
-    """Prefect Flow: Orchestrates ingestion of articles from SQL into Qdrant.
+    """
+    Prefect Flow: Orchestrates ingestion of articles from SQL into Qdrant.
 
     Determines the starting cutoff date for ingestion (user-provided, last run date,
     or default fallback) and runs the Qdrant ingestion task.
