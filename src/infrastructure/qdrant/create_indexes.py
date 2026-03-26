@@ -33,10 +33,10 @@ async def main() -> None:
         await vectorstore.create_article_feed_name_index()
         logger.info("Qdrant indexes created successfully")
     except RuntimeError as e:
-        logger.error(f"Failed to create Qdrant indexes: {e}")
+        logger.error("Failed to create Qdrant indexes: %s", e)
         raise RuntimeError("Error creating Qdrant indexes") from e
     except Exception as e:
-        logger.error(f"Unexpected error creating Qdrant indexes: {e}")
+        logger.error("Unexpected error creating Qdrant indexes: %s", e)
         raise
 
 

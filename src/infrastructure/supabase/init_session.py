@@ -27,9 +27,9 @@ def init_engine() -> Engine:
             logger.error(
                 "Incomplete database configuration: ensure all Supabase settings are provided"
             )
-        logger.info(f"Connecting to database {db.name} at {db.host}: {db.port}")
+        logger.info("Connecting to database %s at %s: %s", db.name, db.host, db.port)
         engine_url = f"postgresql://{db.user}:{db.password.get_secret_value()}@{db.host}:{db.port}/{db.name}"
-        logger.debug(f"Using engine URL: {engine_url}")
+        logger.debug("Using engine URL: %s", engine_url)
 
         # Create the engine with connection pooling options for robustness
         engine = create_engine(
@@ -49,18 +49,18 @@ def init_engine() -> Engine:
         return engine
 
     except AttributeError as e:
-        logger.error(f"Invalid database configuration: {e}")
+        logger.error("Invalid database configuration: %s", e)
         raise ValueError(
             "Invalid database configuration: ensure settings.supabase_db is properly configured"
         ) from e
     except OperationalError as e:
-        logger.error(f"Failed to connect to database: {e}")
+        logger.error("Failed to connect to database: %s", e)
         raise
     except SQLAlchemyError as e:
-        logger.error(f"SQLAlchemy error during engine initialization: {e}")
+        logger.error("SQLAlchemy error during engine initialization: %s", e)
         raise SQLAlchemyError("Failed to initialize database engine") from e
     except Exception as e:
-        logger.error(f"Unexpected error during engine initialization: {e}")
+        logger.error("Unexpected error during engine initialization: %s", e)
         raise
 
 
@@ -95,11 +95,11 @@ def init_session(engine: Engine | None = None) -> Session:
         return session
 
     except ValueError as e:
-        logger.error(f"Failed to create session due to invalid engine: {e}")
+        logger.error("Failed to create session due to invalid engine: %s", e)
         raise ValueError("Cannot create session: invalid or missing engine") from e
     except SQLAlchemyError as e:
-        logger.error(f"SQLAlchemy error during session creation: {e}")
+        logger.error("SQLAlchemy error during session creation: %s", e)
         raise SQLAlchemyError("Failed to create database session") from e
     except Exception as e:
-        logger.error(f"Unexpected error during session creation: {e}")
+        logger.error("Unexpected error during session creation: %s", e)
         raise

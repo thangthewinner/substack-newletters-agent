@@ -54,7 +54,7 @@ def fetch_rss_entries(
             response = requests.get(feed.url, timeout=15)
             response.raise_for_status()
         except requests.RequestException as e:
-            logger.error(f"Failed to fetch feed '{feed.name}': {e}")
+            logger.error("Failed to fetch feed '%s': %s", feed.name, e)
             raise RuntimeError(f"RSS fetch failed for feed '{feed.name}'") from e
 
         soup = BeautifulSoup(response.content, "xml")
@@ -67,7 +67,8 @@ def fetch_rss_entries(
                 )
                 if not link or session.query(article_model).filter_by(url=link).first():
                     logger.info(
-                        f"Skipping already stored or empty-link article for feed '{feed.name}'"
+                        "Skipping already stored or empty-link article for feed '%s'",
+                        feed.name,
                     )
                     continue
 
@@ -97,7 +98,7 @@ def fetch_rss_entries(
                     except StopIteration:
                         continue
                     except Exception as e:
-                        logger.warning(f"Failed to inspect links for '{title}': {e}")
+                        logger.warning("Failed to inspect links for '%s': %s", title, e)
 
                 if raw_html:
                     try:
@@ -114,11 +115,13 @@ def fetch_rss_entries(
                             if line.strip()
                         )
                     except Exception as e:
-                        logger.warning(f"Markdown conversion failed for '{title}': {e}")
+                        logger.warning(
+                            "Markdown conversion failed for '%s': %s", title, e
+                        )
                         content_md = raw_html
 
                 if not content_md:
-                    logger.warning(f"Skipping article '{title}' with empty content")
+                    logger.warning("Skipping article '%s' with empty content", title)
                     continue
 
                 author_elem = item.find("creator") or item.find("dc:creator")
@@ -143,20 +146,26 @@ def fetch_rss_entries(
                 items.append(article_item)
 
             except Exception as e:
-                logger.error(f"Error processing RSS item for feed '{feed.name}': {e}")
+                logger.error(
+                    "Error processing RSS item for feed '%s': %s",
+                    feed.name,
+                    e,
+                )
                 continue
 
-        logger.info(f"Fetched {len(items)} new articles for feed '{feed.name}'")
+        logger.info("Fetched %s new articles for feed '%s'", len(items), feed.name)
         return items
 
     except Exception as e:
         logger.error(
-            f"Unexpected error in fetch_rss_entries for feed '{feed.name}': {e}"
+            "Unexpected error in fetch_rss_entries for feed '%s': %s",
+            feed.name,
+            e,
         )
         raise
     finally:
         session.close()
-        logger.info(f"Database session closed for feed '{feed.name}'")
+        logger.info("Database session closed for feed '%s'", feed.name)
 
 
 # if __name__ == "__main__":

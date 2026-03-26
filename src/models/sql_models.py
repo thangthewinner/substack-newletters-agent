@@ -9,10 +9,30 @@ from src.config import settings
 
 
 class Base(DeclarativeBase):
+    """Base class for all SQLAlchemy declarative models."""
+
     pass
 
 
 class SubstackArticle(Base):
+    """SQLAlchemy model representing a Substack newsletter article.
+
+    Stores article metadata and content fetched from RSS feeds.
+    Each article is uniquely identified by its URL and has a generated UUID.
+
+    Attributes:
+        id: Primary key - auto-incrementing integer.
+        uuid: Unique UUID for external references.
+        feed_name: Name of the Substack newsletter/feed.
+        feed_author: Author of the newsletter/feed.
+        article_authors: List of article-specific authors.
+        title: Article title.
+        url: Canonical URL of the article.
+        content: Full article content in Markdown format.
+        published_at: Publication timestamp.
+        created_at: Record creation timestamp (server-set).
+    """
+
     __tablename__ = settings.supabase_db.table_name
 
     # Primary internal ID

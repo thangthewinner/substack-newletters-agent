@@ -10,6 +10,8 @@ from src.models.article_models import FeedItem
 
 # Supabase database settings
 class SupabaseDBSettings(BaseModel):
+    """Settings for connecting to Supabase PostgreSQL database."""
+
     table_name: str = Field(
         default="substack_articles", description="Supabase table name"
     )
@@ -27,6 +29,8 @@ class SupabaseDBSettings(BaseModel):
 
 # RSS settings
 class RSSSettings(BaseModel):
+    """Settings for RSS feed ingestion."""
+
     feeds: list[FeedItem] = Field(
         default_factory=list[FeedItem], description="List of RSS feed item"
     )
@@ -40,6 +44,8 @@ class RSSSettings(BaseModel):
 
 # Qdrant settings
 class QdrantSettings(BaseModel):
+    """Settings for Qdrant vector store connection and operations."""
+
     url: str = Field(default="", description="Qdrant API URL")
     api_key: str = Field(default="", description="Qdrant API key")
     collection_name: str = Field(
@@ -70,6 +76,8 @@ class QdrantSettings(BaseModel):
 
 # Text splitting
 class TextSplitterSettings(BaseModel):
+    """Settings for text splitting/chunking operations."""
+
     chunk_size: int = Field(default=4000, description="Size of text chunks")
     chunk_overlap: int = Field(default=200, description="Size of text overlap")
     separators: list[str] = Field(
@@ -88,6 +96,58 @@ class TextSplitterSettings(BaseModel):
             "",
         ],
         description="List of separators for text splitting. The order or separators matter",
+    )
+
+
+# Jina Settings
+class JinaSettings(BaseModel):
+    """Settings for Jina AI embeddings API."""
+
+    api_key: str = Field(default="", description="Jina API key")
+    url: str = Field(
+        default="https://api.jina.ai/v1/embeddings", description="Jina API URL"
+    )
+    model: str = Field(
+        default="jina-embeddings-v3", description="Jina model name"
+    )  # 1024
+
+
+# Hugging Face Settings
+# BAAI/bge-large-en-v1.5 (1024), BAAI/bge-base-en-v1.5 (768)
+class HuggingFaceSettings(BaseModel):
+    """Settings for HuggingFace Inference API for embeddings."""
+
+    api_key: str = Field(default="", description="Hugging Face API key")
+    model: str = Field(
+        default="BAAI/bge-base-en-v1.5", description="Hugging Face model name"
+    )
+
+
+# Openai Settings
+class OpenAISettings(BaseModel):
+    """Settings for OpenAI API (currently unused)."""
+
+    api_key: str | None = Field(default="", description="OpenAI API key")
+    # model: str = Field(default="gpt-4o-mini", description="OpenAI model name")
+
+
+# OpenRouter Settings
+class OpenRouterSettings(BaseModel):
+    """Settings for OpenRouter API for embeddings."""
+
+    api_key: str = Field(default="", description="OpenRouter API key")
+    api_url: str = Field(
+        default="https://openrouter.ai/api/v1", description="OpenRouter API URL"
+    )
+
+
+# Opik Observability Settings
+class OpikObservabilitySettings(BaseModel):
+    """Settings for Opik observability/monitoring."""
+
+    api_key: str = Field(default="", description="Opik Observability API key")
+    project_name: str = Field(
+        default="substack-pipeline", description="Opik project name"
     )
 
 

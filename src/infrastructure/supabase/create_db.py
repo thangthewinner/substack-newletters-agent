@@ -37,17 +37,17 @@ def create_table() -> None:
 
         # Check if the table already exists
         if table_name in existing_tables:
-            logger.info(f"Table '{table_name} already exists. No action needed.")
+            logger.info("Table '%s' already exists. No action needed.", table_name)
         else:
-            logger.info(f"Table '{table_name} does not exists. Creating...")
+            logger.info("Table '%s' does not exists. Creating...", table_name)
             # Create all tables defined in Base.metadata (includes SubstackArticle)
             Base.metadata.create_all(bind=engine)
-            logger.info(f"Table '{table_name}' created successfully.")
+            logger.info("Table '%s' created successfully.", table_name)
     except SQLAlchemyError as e:
-        logger.error(f"SQLAlchemy error creating table '{table_name}': {e}")
+        logger.error("SQLAlchemy error creating table '%s': %s", table_name, e)
         raise SQLAlchemyError(f"Failed to create table '{table_name}'") from e
     except Exception as e:
-        logger.error(f"Unexpected error creating table '{table_name}': {e}")
+        logger.error("Unexpected error creating table '%s': %s", table_name, e)
         raise
     finally:
         # Dispose of the engine to release connections

@@ -1,4 +1,4 @@
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_text_splitters.character import RecursiveCharacterTextSplitter
 
 from src.config import settings
 

@@ -30,7 +30,7 @@ def setup_logging(log_level: str | None = None):
         get_run_context()
         logger = get_run_logger()
         logger.setLevel(log_level)
-        logger.debug(f"Logging initialized at {log_level} level (Prefect).")
+        logger.debug("Logging initialized at %s level (Prefect).", log_level)
         return logger
     except RuntimeError:
         # Outside prefect
@@ -45,7 +45,7 @@ def setup_logging(log_level: str | None = None):
             "<level>{level}</level> | <cyan>{module}</cyan>:<cyan>{function}</cyan> - "
             "<level>{message}</level>",
         )
-        loguru_logger.debug(f"Logging initialized at {log_level} level (Loguru).")
+        loguru_logger.debug("Logging initialized at %s level (Loguru).", log_level)
         return loguru_logger
 
 

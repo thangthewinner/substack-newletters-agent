@@ -36,10 +36,10 @@ async def main() -> None:
         logger.info("Qdrant collection created successfully")
 
     except RuntimeError as e:
-        logger.error(f"Failed to create Qdrant collection: {e}")
+        logger.error("Failed to create Qdrant collection: %s", e)
         raise RuntimeError("Error creating Qdrant collection") from e
     except Exception as e:
-        logger.error(f"Unexpected error during Qdrant collection creation: {e}")
+        logger.error("Unexpected error during Qdrant collection creation: %s", e)
         raise
 
 

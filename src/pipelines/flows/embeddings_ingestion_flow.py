@@ -37,7 +37,7 @@ async def get_last_successful_run(flow_name: str) -> datetime | None:
             flows = await client.read_flows(
                 flow_filter=FlowFilter(name=dict(eq_=flow_name))
             )  # type: ignore
-            logger.debug(f"Flows returned by Prefect API: {flows}")
+            logger.debug("Flows returned by Prefect API: %s", flows)
 
             exact_flow = next((f for f in flows if f.name == flow_name), None)
             if not exact_flow:
@@ -54,25 +54,29 @@ async def get_last_successful_run(flow_name: str) -> datetime | None:
                 sort=FlowRunSort.START_TIME_DESC,
                 limit=10,
             )
-            logger.debug(f"Recent completed runs fetched: {[r.id for r in flow_runs]}")
+            logger.debug("Recent completed runs fetched: %s", [r.id for r in flow_runs])
 
             # Step 3: ensure only runs for this flow
             flow_runs = [r for r in flow_runs if r.flow_id == exact_flow.id]
-            logger.debug(f"Filtered runs for exact flow: {[r.id for r in flow_runs]}")
+            logger.debug("Filtered runs for exact flow: %s", [r.id for r in flow_runs])
 
             if not flow_runs:
-                logger.info(f"No completed runs found for flow: {flow_name}")
+                logger.info("No completed runs found for flow: %s", flow_name)
                 return None
 
             last_run_time = flow_runs[0].start_time
             logger.info(
-                f"Last completed run for flow '{flow_name}' started at {last_run_time}"
+                "Last completed run for flow '%s' started at %s",
+                flow_name,
+                last_run_time,
             )
 
             return last_run_time
 
     except Exception as e:
-        logger.error(f"Error fetching last successful run for flow '{flow_name}': {e}")
+        logger.error(
+            "Error fetching last successful run for flow '%s': %s", flow_name, e
+        )
         raise
 
 
@@ -108,7 +112,7 @@ async def qdrant_ingest_flow(from_date: str | None = None) -> None:
         if from_date:
             # Parse user-provided date and assume UTC midnight
             from_date_dt = parser.parse(from_date).replace(tzinfo=UTC)
-            logger.info(f"Using user-provided from_date: {from_date_dt}")
+            logger.info("Using user-provided from_date: %s", from_date_dt)
         else:
             # Fallback to last run date, default_start_date, or 30 days ago
             last_run_date = await get_last_successful_run("qdrant_ingest_flow")
@@ -117,12 +121,12 @@ async def qdrant_ingest_flow(from_date: str | None = None) -> None:
                 or parser.parse(rss.default_start_date).replace(tzinfo=UTC)
                 or (datetime.now(UTC) - timedelta(days=30))
             )
-            logger.info(f"Using fallback from_date: {from_date_dt}")
+            logger.info("Using fallback from_date: %s", from_date_dt)
 
         await ingest_qdrant(from_date=from_date_dt)
 
     except Exception as e:
-        logger.error(f"Error during Qdrant ingestion flow: {e}")
+        logger.error("Error during Qdrant ingestion flow: %s", e)
         raise RuntimeError("Qdrant ingestion flow failed") from e
 
 

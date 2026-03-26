@@ -19,7 +19,7 @@ class FeedItem(BaseModel):
         while len(s) >= 2 and (s[0] in quote_chars) and (s[-1] in quote_chars):
             s = s[1:-1].strip()
         return s
-        
+
 
 # Article settings
 class ArticleItem(BaseModel):
