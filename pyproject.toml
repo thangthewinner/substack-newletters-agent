@@ -1,0 +1,23 @@
+[project]
+name = "substack-newletters-search"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "beautifulsoup4>=4.14.3",
+    "fastapi>=0.135.2",
+    "loguru>=0.7.3",
+    "lxml>=6.0.2",
+    "markdownify>=1.2.2",
+    "perfect>=0.0.1",
+    "prefect>=3.6.23",
+    "psutil>=7.2.2",
+    "psycopg2>=2.9.11",
+    "pydantic>=2.12.5",
+    "pydantic-settings>=2.13.1",
+    "requests>=2.32.5",
+    "sqlalchemy>=2.0.48",
+    "stubs>=1.0.0",
+    "uvicorn>=0.42.0",
+]
