@@ -7,8 +7,8 @@ logger = setup_logging()
 
 
 async def main() -> None:
-    """C
-    reate necessary indexes for the Qdrant vector store.
+    """
+    Create necessary indexes for the Qdrant vector store.
 
     Initializes an AsyncQdrantVectorStore and creates HNSW, title, article authors,
     feed author, and feed name indexes. Logs errors and ensures proper execution.
@@ -34,10 +34,10 @@ async def main() -> None:
         await vectorstore.create_article_feed_name_index()
         logger.info("Qdrant indexes created successfully")
     except RuntimeError as e:
-        logger.error("Failed to create Qdrant indexes: %s", e)
+        logger.error(f"Failed to create Qdrant indexes: {e}")
         raise RuntimeError("Error creating Qdrant indexes") from e
     except Exception as e:
-        logger.error("Unexpected error creating Qdrant indexes: %s", e)
+        logger.error(f"Unexpected error creating Qdrant indexes: {e}")
         raise
 
 

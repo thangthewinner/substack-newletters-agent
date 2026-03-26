@@ -123,22 +123,20 @@ class AsyncQdrantVectorStore:
             )
             if exists:
                 self.logger.info(
-                    "Collection '%s' already exists. Skipping creation.",
-                    self.collection_name,
+                    f"Collection '{self.collection_name}' already exists. Skipping creation."
                 )
                 return
         except UnexpectedResponse as e:
             if e.status_code == 404:
                 self.logger.info(
-                    "Collection '%s' does not exist. Will create it.",
-                    self.collection_name,
+                    f"Collection '{self.collection_name}' does not exist. Will create it."
                 )
             else:
-                self.logger.error("Unexpected Qdrant error: %s", e)
+                self.logger.error(f"Unexpected Qdrant error: {e}")
                 raise RuntimeError("Failed to check collection existence") from e
 
         try:
-            self.logger.info("Creating Qdrant collection: %s", self.collection_name)
+            self.logger.info("Creating Qdrant collection: {}", self.collection_name)
             await self.client.create_collection(
                 collection_name=self.collection_name,
                 vectors_config={
@@ -152,14 +150,11 @@ class AsyncQdrantVectorStore:
                 optimizers_config=models.OptimizersConfigDiff(indexing_threshold=0),
             )
             self.logger.info(
-                "Collection '%s' created successfully.",
-                self.collection_name,
+                f"Collection '{self.collection_name}' created successfully."
             )
         except Exception as e:
             self.logger.error(
-                "Failed to create collection '%s': %s",
-                self.collection_name,
-                e,
+                f"Failed to create collection '{self.collection_name}': {e}"
             )
             raise RuntimeError("Error creating Qdrant collection") from e
 
@@ -184,25 +179,21 @@ class AsyncQdrantVectorStore:
         )
         if confirm != "YES":
             self.logger.info(
-                "Deletion of collection '%s' canceled by user.",
-                self.collection_name,
+                f"Deletion of collection '{self.collection_name}' canceled by user."
             )
             return
 
         try:
-            self.logger.info("Deleting Qdrant collection: %s", self.collection_name)
+            self.logger.info(f"Deleting Qdrant collection: {self.collection_name}")
             await self.client.delete_collection(collection_name=self.collection_name)
-            self.logger.info("Qdrant collection '%s' deleted.", self.collection_name)
+            self.logger.info(f"Qdrant collection '{self.collection_name}' deleted.")
         except Exception as e:
             self.logger.error(
-                "Failed to delete collection '%s': %s",
-                self.collection_name,
-                e,
+                f"Failed to delete collection '{self.collection_name}': {e}"
             )
             raise RuntimeError("Error deleting Qdrant collection") from e
 
     # Update collection to enable HNSW
-
     async def enable_hnsw(self, m: int = 16, indexing_threshold: int = 20000) -> None:
         """
         Enable HNSW indexing for the Qdrant collection.
@@ -223,7 +214,7 @@ class AsyncQdrantVectorStore:
         """
         try:
             self.logger.info(
-                "Enabling HNSW for collection '%s' with m=%s and indexing_threshold=%s",
+                "Enabling HNSW for collection '{}' with m={} and indexing_threshold={}",
                 self.collection_name,
                 m,
                 indexing_threshold,
@@ -240,17 +231,14 @@ class AsyncQdrantVectorStore:
                     indexing_threshold=indexing_threshold
                 ),
             )
-            self.logger.info("HNSW enabled for collection '%s'", self.collection_name)
+            self.logger.info(f"HNSW enabled for collection '{self.collection_name}'")
         except Exception as e:
             self.logger.error(
-                "Failed to enable HNSW for collection '%s': %s",
-                self.collection_name,
-                e,
+                f"Failed to enable HNSW for collection '{self.collection_name}': {e}"
             )
             raise RuntimeError("Error enabling HNSW indexing") from e
 
     # Indexes
-
     async def create_feed_author_index(self) -> None:
         """
         Create keyword index for feed_author field.
@@ -264,10 +252,7 @@ class AsyncQdrantVectorStore:
 
         """
         try:
-            self.logger.info(
-                "Creating feed_author index for '%s'",
-                self.collection_name,
-            )
+            self.logger.info(f"Creating feed_author index for '{self.collection_name}'")
             await self.client.create_payload_index(
                 collection_name=self.collection_name,
                 field_name="feed_author",
@@ -275,12 +260,9 @@ class AsyncQdrantVectorStore:
                     type=models.KeywordIndexType.KEYWORD
                 ),
             )
-            self.logger.info(
-                "feed_author index created for '%s'",
-                self.collection_name,
-            )
+            self.logger.info(f"feed_author index created for '{self.collection_name}'")
         except Exception as e:
-            self.logger.error("Failed to create feed_author index: %s", e)
+            self.logger.error(f"Failed to create feed_author index: {e}")
             raise RuntimeError("Error creating feed_author index") from e
 
     async def create_article_authors_index(self) -> None:
@@ -297,8 +279,7 @@ class AsyncQdrantVectorStore:
         """
         try:
             self.logger.info(
-                "Creating article_authors index for '%s'",
-                self.collection_name,
+                f"Creating article_authors index for '{self.collection_name}'"
             )
             await self.client.create_payload_index(
                 collection_name=self.collection_name,
@@ -308,11 +289,10 @@ class AsyncQdrantVectorStore:
                 ),
             )
             self.logger.info(
-                "article_authors index created for '%s'",
-                self.collection_name,
+                f"article_authors index created for '{self.collection_name}'"
             )
         except Exception as e:
-            self.logger.error("Failed to create article_authors index: %s", e)
+            self.logger.error(f"Failed to create article_authors index: {e}")
             raise RuntimeError("Error creating article_authors index") from e
 
     async def create_article_feed_name_index(self) -> None:
@@ -328,10 +308,7 @@ class AsyncQdrantVectorStore:
 
         """
         try:
-            self.logger.info(
-                "Creating feed_name index for '%s'",
-                self.collection_name,
-            )
+            self.logger.info(f"Creating feed_name index for '{self.collection_name}'")
             await self.client.create_payload_index(
                 collection_name=self.collection_name,
                 field_name="feed_name",
@@ -339,12 +316,9 @@ class AsyncQdrantVectorStore:
                     type=models.KeywordIndexType.KEYWORD
                 ),
             )
-            self.logger.info(
-                "feed_name index created for '%s'",
-                self.collection_name,
-            )
+            self.logger.info(f"feed_name index created for '{self.collection_name}'")
         except Exception as e:
-            self.logger.error("Failed to create feed_name index: %s", e)
+            self.logger.error(f"Failed to create feed_name index: {e}")
             raise RuntimeError("Error creating feed_name index") from e
 
     async def create_title_index(self) -> None:
@@ -360,10 +334,7 @@ class AsyncQdrantVectorStore:
 
         """
         try:
-            self.logger.info(
-                "Creating title index for '%s'",
-                self.collection_name,
-            )
+            self.logger.info(f"Creating title index for '{self.collection_name}'")
             await self.client.create_payload_index(
                 collection_name=self.collection_name,
                 field_name="title",
@@ -378,9 +349,9 @@ class AsyncQdrantVectorStore:
                     ),
                 ),
             )
-            self.logger.info("title index created for '%s'", self.collection_name)
+            self.logger.info(f"title index created for '{self.collection_name}'")
         except Exception as e:
-            self.logger.error("Failed to create title index: %s", e)
+            self.logger.error(f"Failed to create title index: {e}")
             raise RuntimeError("Error creating title index") from e
 
     # Embeddings
@@ -418,7 +389,7 @@ class AsyncQdrantVectorStore:
             response.raise_for_status()
             return [item["embedding"] for item in response.json().get("data", [])]
         except requests.RequestException as e:
-            self.logger.error("Jina API request failed: %s", e)
+            self.logger.error(f"Jina API request failed: {e}")
             raise
 
     def hf_dense_vectors(self, texts: list[str]) -> list[list[float]]:
@@ -442,7 +413,7 @@ class AsyncQdrantVectorStore:
                 vectors.append(arr.tolist() if isinstance(arr, np.ndarray) else arr)
             return vectors
         except Exception as e:
-            self.logger.error("Hugging Face inference failed: %s", e)
+            self.logger.error(f"Hugging Face inference failed: {e}")
             raise
 
     def dense_vectors(self, texts: list[str]) -> list[list[float]]:
@@ -466,7 +437,7 @@ class AsyncQdrantVectorStore:
                 return self.hf_dense_vectors(texts)
             return [vec.tolist() for vec in self.dense_model.embed(texts)]
         except Exception as e:
-            self.logger.error("Failed to generate dense vectors: %s", e)
+            self.logger.error(f"Failed to generate dense vectors: {e}")
             raise
 
     def sparse_vectors(self, texts: list[str]) -> list[SparseVector]:
@@ -491,7 +462,7 @@ class AsyncQdrantVectorStore:
                 )
             ]
         except Exception as e:
-            self.logger.error("Failed to generate sparse vectors: %s", e)
+            self.logger.error(f"Failed to generate sparse vectors: {e}")
             raise
 
     # Embedding helpers (memory-efficient)
@@ -535,7 +506,7 @@ class AsyncQdrantVectorStore:
             del dense_result, sparse_result
             return dense_vecs, sparse_vecs
         except Exception as e:
-            self.logger.error("Failed to generate embeddings: %s", e)
+            self.logger.error(f"Failed to generate embeddings: {e}")
             raise RuntimeError("Error generating batch embeddings") from e
 
     async def _article_batch_generator(
@@ -572,7 +543,7 @@ class AsyncQdrantVectorStore:
                 yield articles
                 offset += self.article_batch_size
         except Exception as e:
-            self.logger.error("Failed to fetch article batch: %s", e)
+            self.logger.error(f"Failed to fetch article batch: {e}")
             raise
 
     async def ingest_from_sql(
@@ -727,5 +698,5 @@ class AsyncQdrantVectorStore:
                 f"final average speed = {final_speed:.2f} chunks/sec"
             )
         except Exception as e:
-            self.logger.error("Failed to ingest articles to Qdrant: %s", e)
+            self.logger.error(f"Failed to ingest articles to Qdrant: {e}")
             raise RuntimeError("Error during SQL to Qdrant ingestion") from e

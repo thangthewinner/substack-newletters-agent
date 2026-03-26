@@ -177,6 +177,12 @@ class Settings(BaseSettings):
     rss: RSSSettings = Field(default_factory=RSSSettings)
     text_splitter: TextSplitterSettings = Field(default_factory=TextSplitterSettings)
 
+    jina: JinaSettings = Field(default_factory=JinaSettings)
+    hugging_face: HuggingFaceSettings = Field(default_factory=HuggingFaceSettings)
+    openai: OpenAISettings = Field(default_factory=OpenAISettings)
+    openrouter: OpenRouterSettings = Field(default_factory=OpenRouterSettings)
+    opik: OpikObservabilitySettings = Field(default_factory=OpikObservabilitySettings)
+
     rss_config_yaml_path: str = "src/configs/feeds_rss.yaml"
 
     model_config: ClassVar[SettingsConfigDict] = SettingsConfigDict(

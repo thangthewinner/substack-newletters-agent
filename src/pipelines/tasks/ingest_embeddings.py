@@ -35,9 +35,9 @@ async def ingest_qdrant(from_date: datetime | None = None):
 
     """
     logger = setup_logging()
-    logger.info("Starting Qdrant ingestion task from_date=%s", from_date)
+    logger.info(f"Starting Qdrant ingestion task from_date={from_date}")
 
-    logger.info("QDRANT_URL: %s", os.getenv("QDRANT__URL"))
+    logger.info(f"QDRANT_URL: {os.getenv('QDRANT__URL')}")
 
     vectorstore = AsyncQdrantVectorStore()
     engine = init_engine()
@@ -46,7 +46,7 @@ async def ingest_qdrant(from_date: datetime | None = None):
     try:
         await vectorstore.ingest_from_sql(session=session, from_date=from_date)
     except Exception as e:
-        logger.error("Unexpected error during Qdrant ingestion: %s", e)
+        logger.error(f"Unexpected error during Qdrant ingestion: {e}")
         raise RuntimeError("Qdrant ingestion failed") from e
     finally:
         # Cleanup resources

@@ -44,10 +44,10 @@ async def main() -> None:
         await vectorstore.ingest_from_sql(session=session, from_date=from_date)
         logger.info("Ingestion task completed successfully")
     except RuntimeError as e:
-        logger.error("Failed to ingest articles to Qdrant: %s", e)
+        logger.error(f"Failed to ingest articles to Qdrant: {e}")
         raise RuntimeError("Error during SQL to Qdrant ingestion") from e
     except Exception as e:
-        logger.error("Unexpected error during ingestion: %s", e)
+        logger.error(f"Unexpected error during ingestion: {e}")
         raise
     finally:
         # Close session and Qdrant client

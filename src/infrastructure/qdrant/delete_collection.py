@@ -30,10 +30,10 @@ async def main() -> None:
         await vectorstore.delete_collection()
         logger.info("Qdrant collection deleted successfully")
     except RuntimeError as e:
-        logger.error("Failed to delete Qdrant collection: %s", e)
+        logger.error(f"Failed to delete Qdrant collection: {e}")
         raise RuntimeError("Error deleting Qdrant collection") from e
     except Exception as e:
-        logger.error("Unexpected error deleting Qdrant collection: %s", e)
+        logger.error(f"Unexpected error deleting Qdrant collection: {e}")
         raise
 
 

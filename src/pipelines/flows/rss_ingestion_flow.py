@@ -51,7 +51,7 @@ def rss_ingest_flow(article_model: type[SubstackArticle] = SubstackArticle) -> N
             FeedItem(name=f.name, author=f.author, url=f.url)
             for f in settings.rss.feeds
         ]
-        logger.info("Processing %s feeds concurrently...", len(feeds))
+        logger.info(f"Processing {len(feeds)} feeds concurrently...")
 
         # 1. Fetch articles concurrently
         fetched_articles_futures = fetch_rss_entries.map(
@@ -66,12 +66,12 @@ def rss_ingest_flow(article_model: type[SubstackArticle] = SubstackArticle) -> N
             try:
                 fetched_articles = fetched_future.result()
             except Exception as e:
-                logger.error("Error fetching articles for feed '%s': %s", feed.name, e)
+                logger.error(f"Error fetching articles for feed '{feed.name}': {e}")
                 errors.append(f"Fetch error: {feed.name}")
                 continue
 
             if not fetched_articles:
-                logger.info("No new articles for feed '%s'", feed.name)
+                logger.info(f"No new articles for feed '{feed.name}'")
                 per_feed_counts[feed.name] = 0
                 continue
 
@@ -80,7 +80,7 @@ def rss_ingest_flow(article_model: type[SubstackArticle] = SubstackArticle) -> N
                 per_feed_counts[feed.name] = count
                 total_ingested += count
                 logger.info(
-                    "Feed '%s': %s articles ready for ingestion", feed.name, count
+                    f"Feed '{feed.name}': {count} articles ready for ingestion"
                 )
 
                 task_result = ingest_from_rss.submit(
@@ -92,9 +92,7 @@ def rss_ingest_flow(article_model: type[SubstackArticle] = SubstackArticle) -> N
                 results.append(task_result)
             except Exception as e:
                 logger.error(
-                    "Error submitting ingest_from_rss for feed '%s': %s",
-                    feed.name,
-                    e,
+                    f"Error submitting ingest_from_rss for feed '{feed.name}': {e}"
                 )
                 errors.append(f"Ingest error: {feed.name}")
 
@@ -103,21 +101,21 @@ def rss_ingest_flow(article_model: type[SubstackArticle] = SubstackArticle) -> N
             try:
                 r.result()
             except Exception as e:
-                logger.error("Error in ingest_from_rss task: %s", e)
+                logger.error(f"Error in ingest_from_rss task: {e}")
                 errors.append("Task failure")
 
         # ---- Summary logging ----
         logger.info("Ingestion Summary per feed:")
         for feed_name, count in per_feed_counts.items():
-            logger.info("   • %s: %s article(s) ingested", feed_name, count)
+            logger.info(f"   • {feed_name}: {count} article(s) ingested")
 
-        logger.info("Total ingested across all feeds: %s", total_ingested)
+        logger.info(f"Total ingested across all feeds: {total_ingested}")
 
         if errors:
             raise RuntimeError(f"Flow completed with errors: {errors}")
 
     except Exception as e:
-        logger.error("Unexpected error in rss_ingest_flow: %s", e)
+        logger.error(f"Unexpected error in rss_ingest_flow: {e}")
         raise
     finally:
         engine.dispose()

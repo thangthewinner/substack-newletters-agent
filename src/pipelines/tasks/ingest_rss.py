@@ -58,18 +58,12 @@ def ingest_from_rss(
                 except Exception as e:
                     session.rollback()
                     logger.error(
-                        "Failed to ingest batch %s for feed '%s': %s",
-                        batch_num,
-                        feed.name,
-                        e,
+                        f"Failed to ingest batch {batch_num} for feed '{feed.name}': {e}"
                     )
                     errors.append(f"Batch {batch_num}")
                 else:
                     logger.info(
-                        "Ingested batch %s with %s articles for feed '%s'",
-                        batch_num,
-                        len(batch),
-                        feed.name,
+                        f"Ingested batch {batch_num} with {len(batch)} articles for feed '{feed.name}'"
                     )
                 batch = []
 
@@ -81,31 +75,23 @@ def ingest_from_rss(
             except Exception as e:
                 session.rollback()
                 logger.error(
-                    "Failed to ingest final batch for feed '%s': %s",
-                    feed.name,
-                    e,
+                    f"Failed to ingest final batch for feed '{feed.name}': {e}"
                 )
                 errors.append("Final batch")
             else:
                 logger.info(
-                    "Ingested final batch of %s articles for feed '%s'",
-                    len(batch),
-                    feed.name,
+                    f"Ingested final batch of {len(batch)} articles for feed '{feed.name}'"
                 )
 
         if errors:
             raise RuntimeError(f"Ingestion completed with errors: {errors}")
 
     except Exception as e:
-        logger.error(
-            "Unexpected error in ingest_from_rss for feed '%s': %s",
-            feed.name,
-            e,
-        )
+        logger.error(f"Unexpected error in ingest_from_rss for feed '{feed.name}': {e}")
         raise
     finally:
         session.close()
-        logger.info("Database session closed for feed '%s'", feed.name)
+        logger.info(f"Database session closed for feed '{feed.name}'")
 
 
 def _persist_batch(
