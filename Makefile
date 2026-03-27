@@ -70,8 +70,14 @@ recreate-all: supabase-delete qdrant-delete-collection supabase-create qdrant-cr
 
 
 ## FastAPI Commands
-
 run-api: ## Run FastAPI application
 	@echo "Starting FastAPI application..."
 	uv run python -m src.api.main
 	@echo "FastAPI application stopped."
+
+
+## Gradio Commands 
+run-gradio: ## Run Gradio application
+	@echo "Starting Gradio application..."
+	uv run python -m frontend.app
+	@echo "Gradio application stopped."
