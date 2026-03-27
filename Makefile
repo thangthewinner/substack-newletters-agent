@@ -67,3 +67,11 @@ recreate-supabase: supabase-delete supabase-create ## Recreate Supabase resource
 recreate-qdrant: qdrant-delete-collection qdrant-create-collection ## Recreate Qdrant resources
 
 recreate-all: supabase-delete qdrant-delete-collection supabase-create qdrant-create-collection ## Recreate Qdrant and Supabase resources
+
+
+## FastAPI Commands
+
+run-api: ## Run FastAPI application
+	@echo "Starting FastAPI application..."
+	uv run python -m src.api.main
+	@echo "FastAPI application stopped."
