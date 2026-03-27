@@ -45,8 +45,8 @@ async def query_with_filters(
             List of search results containing title, feed info, URL, chunk text, and score.
     """
     vectorstore: AsyncQdrantVectorStore = request.app.state.vectorstore
-    dense_vector: vectorstore.dense_vectors([query_text][0])
-    sparse_vector: vectorstore.sparse_vectors([query_text][0])
+    dense_vector = vectorstore.dense_vectors([query_text])[0]
+    sparse_vector = vectorstore.sparse_vectors([query_text])[0]
 
     # Build filter conditions
     conditions: list[FieldCondition] = []
