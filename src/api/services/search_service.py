@@ -1,5 +1,3 @@
-import opik
-from fastapi import Request
 from qdrant_client.models import (
     FieldCondition,
     Filter,
@@ -17,9 +15,8 @@ from src.utils.logger_util import setup_logging
 logger = setup_logging()
 
 
-@opik.track(name="query_with_filters")
 async def query_with_filters(
-    request: Request,
+    vectorstore: AsyncQdrantVectorStore,
     query_text: str = "",
     feed_author: str | None = None,
     feed_name: str | None = None,
@@ -33,7 +30,7 @@ async def query_with_filters(
     on feed author, feed name, and title keywords. Results are deduplicated by point ID.
 
     Args:
-        request (Request): FastAPI request object containing the vector store in app.state.
+        vectorstore (AsyncQdrantVectorStore): The vector store instance.
         query_text (str): Text query to search for.
         feed_author (str | None): Optional filter for the feed author.
         feed_name (str | None): Optional filter for the feed name.
@@ -44,19 +41,24 @@ async def query_with_filters(
         list[SearchResult]:
             List of search results containing title, feed info, URL, chunk text, and score.
     """
-    vectorstore: AsyncQdrantVectorStore = request.app.state.vectorstore
     dense_vector = vectorstore.dense_vectors([query_text])[0]
     sparse_vector = vectorstore.sparse_vectors([query_text])[0]
 
     # Build filter conditions
     conditions: list[FieldCondition] = []
     if feed_author:
-        conditions.append(FieldCondition(key="feed_author", match=MatchValue(value=feed_author)))
+        conditions.append(
+            FieldCondition(key="feed_author", match=MatchValue(value=feed_author))
+        )
     if feed_name:
-        conditions.append(FieldCondition(key="feed_name", match=MatchValue(value=feed_name)))
+        conditions.append(
+            FieldCondition(key="feed_name", match=MatchValue(value=feed_name))
+        )
     if title_keywords:
         conditions.append(
-            FieldCondition(key="title", match=MatchText(text=title_keywords.strip().lower()))
+            FieldCondition(
+                key="title", match=MatchText(text=title_keywords.strip().lower())
+            )
         )
 
     query_filter = Filter(must=conditions) if conditions else None  # type: ignore
@@ -68,14 +70,24 @@ async def query_with_filters(
         collection_name=vectorstore.collection_name,
         query=FusionQuery(fusion=Fusion.RRF),
         prefetch=[
-            Prefetch(query=dense_vector, using="Dense", limit=fetch_limit, filter=query_filter),
-            Prefetch(query=sparse_vector, using="Sparse", limit=fetch_limit, filter=query_filter),
+            Prefetch(
+                query=dense_vector,
+                using="Dense",
+                limit=fetch_limit,
+                filter=query_filter,
+            ),
+            Prefetch(
+                query=sparse_vector,
+                using="Sparse",
+                limit=fetch_limit,
+                filter=query_filter,
+            ),
         ],
         query_filter=query_filter,
         limit=fetch_limit,
     )
 
-    # Deduplicate by point ID 
+    # Deduplicate by point ID
     seen_ids: set[str] = set()
     results: list[SearchResult] = []
     for point in response.points:
@@ -98,11 +110,10 @@ async def query_with_filters(
     results = results[:limit]
     logger.info(f"Returning {len(results)} results for matching query '{query_text}'")
     return results
-    
 
-@opik.track(name="query_unique_titles")
+
 async def query_unique_titles(
-    request: Request,
+    vectorstore: AsyncQdrantVectorStore,
     query_text: str,
     feed_author: str | None = None,
     feed_name: str | None = None,
@@ -117,7 +128,7 @@ async def query_unique_titles(
     by article title.
 
     Args:
-        request (Request): FastAPI request object containing the vector store in app.state.
+        vectorstore (AsyncQdrantVectorStore): The vector store instance.
         query_text (str): Text query to search for.
         feed_author (str | None): Optional filter for the feed author.
         feed_name (str | None): Optional filter for the feed name.
@@ -129,19 +140,24 @@ async def query_unique_titles(
             List of unique search results containing title, feed info, URL, chunk text, and score.
 
     """
-    vectorstore: AsyncQdrantVectorStore = request.app.state.vectorstore
     dense_vector = vectorstore.dense_vectors([query_text])[0]
     sparse_vector = vectorstore.sparse_vectors([query_text])[0]
 
     # Build filter conditions
     conditions: list[FieldCondition] = []
     if feed_author:
-        conditions.append(FieldCondition(key="feed_author", match=MatchValue(value=feed_author)))
+        conditions.append(
+            FieldCondition(key="feed_author", match=MatchValue(value=feed_author))
+        )
     if feed_name:
-        conditions.append(FieldCondition(key="feed_name", match=MatchValue(value=feed_name)))
+        conditions.append(
+            FieldCondition(key="feed_name", match=MatchValue(value=feed_name))
+        )
     if title_keywords:
         conditions.append(
-            FieldCondition(key="title", match=MatchText(text=title_keywords.strip().lower()))
+            FieldCondition(
+                key="title", match=MatchText(text=title_keywords.strip().lower())
+            )
         )
 
     query_filter = Filter(must=conditions) if conditions else None  # type: ignore
@@ -153,8 +169,18 @@ async def query_unique_titles(
         collection_name=vectorstore.collection_name,
         query=FusionQuery(fusion=Fusion.RRF),
         prefetch=[
-            Prefetch(query=dense_vector, using="Dense", limit=fetch_limit, filter=query_filter),
-            Prefetch(query=sparse_vector, using="Sparse", limit=fetch_limit, filter=query_filter),
+            Prefetch(
+                query=dense_vector,
+                using="Dense",
+                limit=fetch_limit,
+                filter=query_filter,
+            ),
+            Prefetch(
+                query=sparse_vector,
+                using="Sparse",
+                limit=fetch_limit,
+                filter=query_filter,
+            ),
         ],
         query_filter=query_filter,
         limit=fetch_limit,
@@ -183,6 +209,8 @@ async def query_unique_titles(
         if len(results) >= limit:
             break
 
-    logger.info(f"Returning {len(results)} unique title results for matching query '{query_text}'")
+    logger.info(
+        f"Returning {len(results)} unique title results for matching query '{query_text}'"
+    )
 
     return results

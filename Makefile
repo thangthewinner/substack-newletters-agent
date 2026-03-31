@@ -5,6 +5,7 @@ endif
 
 # Load environment from .env file 
 include .env 
+export
 
 .PHONY: tests mypy clean help ruff-check ruff-check-fix ruff-format ruff-format-fix all-check all-fix 
 
@@ -55,11 +56,6 @@ deploy-cloud-flows: ## Deploy Prefect flows to Prefect Cloud
 	@echo "Deploying Prefect flows to Prefect Cloud..."
 	prefect deploy --prefect-file prefect-cloud.yaml
 	@echo "Prefect Cloud deployment complete."
-
-deploy-local-flows: ## Deploy Prefect flows to Prefect Local Server
-	@echo "Deploying Prefect flows to Prefect Local Server..."
-	prefect deploy --prefect-file prefect-local.yaml
-	@echo "Prefect Local deployment complete."
 
 ## Recreate Commands 
 recreate-supabase: supabase-delete supabase-create ## Recreate Supabase resources

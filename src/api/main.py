@@ -15,7 +15,9 @@ from src.api.exceptions.exception_handlers import (
 from src.api.middleware.logging_middleware import LoggingMiddleware
 from src.api.routes.health_routes import router as health_router
 from src.api.routes.search_routes import router as search_router
+from src.api.services.agent.chat_service import create_agent
 from src.infrastructure.qdrant.qdrant_vectorstore import AsyncQdrantVectorStore
+from src.infrastructure.supabase.init_session import init_engine
 from src.utils.logger_util import setup_logging
 
 dotenv.load_dotenv()
@@ -23,6 +25,7 @@ dotenv.load_dotenv()
 
 # Logger setup
 logger = setup_logging()
+
 
 # Lifespan
 @asynccontextmanager
@@ -53,14 +56,27 @@ async def lifespan(app: FastAPI):
     try:
         # creates Qdrant client internally
         app.state.vectorstore = AsyncQdrantVectorStore(cache_dir=cache_dir)
-    except Exception as e:
-        logger.exception("Failed to initialize QdrantVectorStore")
-        raise e
+
+        # Initialize DB engine once and reuse across requests.
+        app.state.db_engine = init_engine()
+
+        # Build agent once and reuse across requests.
+        app.state.agent = create_agent(
+            vectorstore=app.state.vectorstore,
+            db_engine=app.state.db_engine,
+        )
+    except Exception:
+        logger.exception("Failed to initialize application state")
+        raise
     yield
     try:
         await app.state.vectorstore.client.close()
     except Exception:
         logger.exception("Failed to close Qdrant client")
+    try:
+        app.state.db_engine.dispose()
+    except Exception:
+        logger.exception("Failed to dispose DB engine")
 
 
 # FastAPI application

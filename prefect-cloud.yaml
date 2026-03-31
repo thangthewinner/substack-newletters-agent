@@ -19,15 +19,15 @@ deployments:
   - name: rss-ingest
     entrypoint: src/pipelines/flows/rss_ingestion_flow.py:rss_ingest_flow
     work_pool:
-      name: default-work-pool
+      name: substack-newletters-agent
       job_variables:
         env:
-          SUPABASE_DB__TABLE_NAME: "{{ prefect.blocks.secret.supabase-db--table-name }}"
-          SUPABASE_DB__HOST: "{{ prefect.blocks.secret.supabase-db--host }}"
-          SUPABASE_DB__NAME: "{{ prefect.blocks.secret.supabase-db--name }}"
-          SUPABASE_DB__USER: "{{ prefect.blocks.secret.supabase-db--user }}"
-          SUPABASE_DB__PASSWORD: "{{ prefect.blocks.secret.supabase-db--password }}"
-          SUPABASE_DB__PORT: "{{ prefect.blocks.secret.supabase-db--port }}"
+          SUPABASE_DB__TABLE_NAME: "{{$SUPABASE_DB__TABLE_NAME}}"
+          SUPABASE_DB__HOST: "{{$SUPABASE_DB__HOST}}"
+          SUPABASE_DB__NAME: "{{$SUPABASE_DB__NAME}}"
+          SUPABASE_DB__USER: "{{$SUPABASE_DB__USER}}"
+          SUPABASE_DB__PASSWORD: "{{$SUPABASE_DB__PASSWORD}}"
+          SUPABASE_DB__PORT: "{{$SUPABASE_DB__PORT}}"
 
     schedule:
       cron: "0 0 * * 7"
@@ -35,18 +35,18 @@ deployments:
   - name: qdrant-embeddings
     entrypoint: src/pipelines/flows/embeddings_ingestion_flow.py:qdrant_ingest_flow
     work_pool:
-      name: default-work-pool
+      name: substack-newletters-agent
       job_variables:
         env:
-          SUPABASE_DB__TABLE_NAME: "{{ prefect.blocks.secret.supabase-db--table-name }}"
-          SUPABASE_DB__HOST: "{{ prefect.blocks.secret.supabase-db--host }}"
-          SUPABASE_DB__NAME: "{{ prefect.blocks.secret.supabase-db--name }}"
-          SUPABASE_DB__USER: "{{ prefect.blocks.secret.supabase-db--user }}"
-          SUPABASE_DB__PASSWORD: "{{ prefect.blocks.secret.supabase-db--password }}"
-          SUPABASE_DB__PORT: "{{ prefect.blocks.secret.supabase-db--port }}"
-          QDRANT__API_KEY: "{{ prefect.blocks.secret.qdrant--api-key }}"
-          QDRANT__URL: "{{ prefect.blocks.secret.qdrant--url }}"
-          QDRANT__COLLECTION_NAME: "{{ prefect.blocks.secret.qdrant--collection-name }}"
+          SUPABASE_DB__TABLE_NAME: "{{$SUPABASE_DB__TABLE_NAME}}"
+          SUPABASE_DB__HOST: "{{$SUPABASE_DB__HOST}}"
+          SUPABASE_DB__NAME: "{{$SUPABASE_DB__NAME}}"
+          SUPABASE_DB__USER: "{{$SUPABASE_DB__USER}}"
+          SUPABASE_DB__PASSWORD: "{{$SUPABASE_DB__PASSWORD}}"
+          SUPABASE_DB__PORT: "{{$SUPABASE_DB__PORT}}"
+          QDRANT__API_KEY: "{{$QDRANT__API_KEY}}"
+          QDRANT__URL: "{{$QDRANT__URL}}"
+          QDRANT__COLLECTION_NAME: "{{$QDRANT__COLLECTION_NAME}}"
 
     schedule:
       cron: "0 0 * * 7"

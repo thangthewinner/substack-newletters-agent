@@ -3,7 +3,6 @@ from langchain_text_splitters.character import RecursiveCharacterTextSplitter
 from src.config import settings
 
 
-
 class TextSplitter:
     """
     Wrapper around LangChain's RecursiveCharacterTextSplitter for splitting

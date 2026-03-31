@@ -133,7 +133,7 @@ class OpenAISettings(BaseModel):
 
 # OpenRouter Settings
 class OpenRouterSettings(BaseModel):
-    """Settings for OpenRouter API for embeddings."""
+    """Settings for OpenRouter API access."""
 
     api_key: str = Field(default="", description="OpenRouter API key")
     api_url: str = Field(
@@ -150,6 +150,22 @@ class LangSmithSettings(BaseModel):
         default="substack-chatbot", description="LangSmith project name"
     )
     tracing_v2: bool = Field(default=False, description="Enable LangSmith tracing")
+
+
+class AgentSettings(BaseModel):
+    """Settings for agent runtime behavior."""
+
+    default_model: str = Field(
+        default="nvidia/nemotron-3-super-120b-a12b:free",
+        description="Default OpenRouter model for the chat agent",
+    )
+    temperature: float = Field(default=0.0, description="Sampling temperature")
+    max_tokens: int = Field(
+        default=5000, description="Maximum completion tokens for chat responses"
+    )
+    stream_version: str = Field(
+        default="v2", description="LangGraph event stream version"
+    )
 
 
 # YAML loader
@@ -183,6 +199,7 @@ class Settings(BaseSettings):
     openai: OpenAISettings = Field(default_factory=OpenAISettings)
     openrouter: OpenRouterSettings = Field(default_factory=OpenRouterSettings)
     langsmith: LangSmithSettings = Field(default_factory=LangSmithSettings)
+    agent: AgentSettings = Field(default_factory=AgentSettings)
 
     rss_config_yaml_path: str = "src/configs/feeds_rss.yaml"
 
