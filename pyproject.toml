@@ -19,7 +19,6 @@ dependencies = [
     "lxml>=6.0.2",
     "markdownify>=1.2.2",
     "numpy>=2.4.3",
-    "opik>=1.10.52",
     "perfect>=0.0.1",
     "prefect>=3.6.23",
     "psutil>=7.2.2",

@@ -141,14 +141,15 @@ class OpenRouterSettings(BaseModel):
     )
 
 
-# Opik Observability Settings
-class OpikObservabilitySettings(BaseModel):
-    """Settings for Opik observability/monitoring."""
+# LangSmith Observability Settings
+class LangSmithSettings(BaseModel):
+    """Settings for LangSmith observability."""
 
-    api_key: str = Field(default="", description="Opik Observability API key")
-    project_name: str = Field(
-        default="substack-pipeline", description="Opik project name"
+    api_key: str = Field(default="", description="LangSmith API key")
+    project: str = Field(
+        default="substack-chatbot", description="LangSmith project name"
     )
+    tracing_v2: bool = Field(default=False, description="Enable LangSmith tracing")
 
 
 # YAML loader
@@ -181,7 +182,7 @@ class Settings(BaseSettings):
     hugging_face: HuggingFaceSettings = Field(default_factory=HuggingFaceSettings)
     openai: OpenAISettings = Field(default_factory=OpenAISettings)
     openrouter: OpenRouterSettings = Field(default_factory=OpenRouterSettings)
-    opik: OpikObservabilitySettings = Field(default_factory=OpikObservabilitySettings)
+    langsmith: LangSmithSettings = Field(default_factory=LangSmithSettings)
 
     rss_config_yaml_path: str = "src/configs/feeds_rss.yaml"
 
