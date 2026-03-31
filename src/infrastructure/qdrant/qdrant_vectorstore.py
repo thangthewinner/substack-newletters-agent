@@ -654,7 +654,7 @@ class AsyncQdrantVectorStore:
                             collection_name=self.collection_name,
                             points=Batch(
                                 ids=sub_ids,  # type: ignore
-                                payloads=[p.dict() for p in sub_payloads],
+                                payloads=[p.model_dump() for p in sub_payloads],
                                 vectors={"Dense": dense_vecs, "Sparse": sparse_vecs},  # type: ignore
                             ),
                         )

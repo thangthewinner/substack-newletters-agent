@@ -16,7 +16,7 @@ supabase-create:
 
 supabase-delete:
 	@echo "Deleting Supabase database..."
-	uv run python -m src.pipelines.flows.delete_db
+	uv run python -m src.infrastructure.supabase.delete_db
 
 
 ## Qdrant commands

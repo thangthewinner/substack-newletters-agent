@@ -50,8 +50,6 @@ class ChatMessage(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: list[ChatMessage] = Field(description="Full conversation history")
-    feed_name: str | None = Field(default=None, description="Optional context filter")
-    feed_author: str | None = Field(default=None, description="Optional context filter")
 
 
 class ChatResponse(BaseModel):

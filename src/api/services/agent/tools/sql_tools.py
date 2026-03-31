@@ -1,3 +1,5 @@
+import asyncio
+
 from langchain_core.tools import BaseTool, tool
 from sqlalchemy import func, select
 from sqlalchemy.engine import Engine
@@ -9,15 +11,12 @@ from src.models.sql_models import SubstackArticle
 def create_sql_tools(db_engine: Engine) -> list[BaseTool]:
     """Create SQL-backed tools used by the chat agent."""
 
-    @tool
-    async def get_articles_by_date(
+    def _fetch_articles(
         date: str,
-        feed_name: str | None = None,
-        limit: int = 10,
+        feed_name: str | None,
+        limit: int,
     ) -> list[dict[str, str]]:
-        """Fetch articles published on a specific date (format: YYYY-MM-DD).
-        Use when the user asks 'articles from [date]' or 'what was published on [date]'.
-        Example: date='2025-03-20'"""
+        """Synchronous helper: runs in a thread to avoid blocking the event loop."""
         with Session(db_engine) as session:
             stmt = select(SubstackArticle).where(
                 func.date(SubstackArticle.published_at) == date
@@ -37,5 +36,16 @@ def create_sql_tools(db_engine: Engine) -> list[BaseTool]:
             }
             for r in rows
         ]
+
+    @tool
+    async def get_articles_by_date(
+        date: str,
+        feed_name: str | None = None,
+        limit: int = 10,
+    ) -> list[dict[str, str]]:
+        """Fetch articles published on a specific date (format: YYYY-MM-DD).
+        Use when the user asks 'articles from [date]' or 'what was published on [date]'.
+        Example: date='2025-03-20'"""
+        return await asyncio.to_thread(_fetch_articles, date, feed_name, limit)
 
     return [get_articles_by_date]
