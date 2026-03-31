@@ -14,7 +14,7 @@ from src.api.exceptions.exception_handlers import (
 )
 from src.api.middleware.logging_middleware import LoggingMiddleware
 from src.api.routes.health_routes import router as health_router
-from src.api.routes.search_routes import router as search_router
+from src.api.routes.search_routes import router as chat_router
 from src.api.services.agent.chat_service import create_agent
 from src.infrastructure.qdrant.qdrant_vectorstore import AsyncQdrantVectorStore
 from src.infrastructure.supabase.init_session import init_engine
@@ -111,7 +111,7 @@ app.add_exception_handler(UnexpectedResponse, qdrant_exception_handler)
 app.add_exception_handler(Exception, general_exception_handler)
 
 # Routers
-app.include_router(search_router, prefix="/search", tags=["search"])
+app.include_router(chat_router, tags=["chat"])
 app.include_router(health_router, tags=["health"])
 
 # For Cloud Run, run the app directly

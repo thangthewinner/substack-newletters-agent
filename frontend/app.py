@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8080")
-API_BASE_URL = f"{BACKEND_URL}/search"
+API_BASE_URL = BACKEND_URL
 
 
 def stream_chat(
