@@ -512,7 +512,7 @@ class AsyncQdrantVectorStore:
             raise RuntimeError("Error generating batch embeddings") from e
 
     async def _article_batch_generator(
-        self, session: Session, from_date: u " nhiều khả năng đến từ môi trường runtime khác (shell export, termdatetime | None = None
+        self, session: Session, from_date: datetime | None = None
     ) -> AsyncGenerator[list[SubstackArticle], None]:
         """
         Yield batches of articles from SQL database.
