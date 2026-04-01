@@ -1,4 +1,5 @@
 import os
+import uuid
 from collections.abc import Generator
 
 import gradio as gr
@@ -9,6 +10,7 @@ load_dotenv()
 
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8080")
 API_BASE_URL = BACKEND_URL
+SESSION_ID = str(uuid.uuid4())
 
 
 def stream_chat(
@@ -17,6 +19,7 @@ def stream_chat(
     """Stream chat responses from the backend chat endpoint."""
     payload = {
         "messages": messages,
+        "session_id": SESSION_ID,
     }
 
     try:

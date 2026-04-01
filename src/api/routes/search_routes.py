@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from src.api.models.api_models import (
     ChatRequest,
@@ -9,8 +11,10 @@ from src.api.models.api_models import (
 )
 from src.api.services.agent.chat_service import run_chat, run_chat_stream
 from src.api.services.search_service import query_unique_titles
+from src.config import settings
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post("/unique-titles", response_model=UniqueTitleResponse)
@@ -41,6 +45,7 @@ async def search_unique(request: Request, params: UniqueTitleRequest):
 
 
 @router.post("/chat", response_model=ChatResponse)
+@limiter.limit(settings.agent.rate_limit)
 async def chat(request: Request, body: ChatRequest):
     """
     Chat endpoint using LangGraph ReAct agent.
@@ -54,11 +59,12 @@ async def chat(request: Request, body: ChatRequest):
 
     """
     agent = request.app.state.agent
-    reply = await run_chat(agent, body.messages)
+    reply = await run_chat(agent, body.messages, session_id=body.session_id)
     return ChatResponse(reply=reply)
 
 
 @router.post("/chat/stream")
+@limiter.limit(settings.agent.rate_limit)
 async def chat_stream(request: Request, body: ChatRequest):
     """
     Streaming chat endpoint using LangGraph ReAct agent.
@@ -74,7 +80,11 @@ async def chat_stream(request: Request, body: ChatRequest):
     agent = request.app.state.agent
 
     async def generator():
-        async for chunk in run_chat_stream(agent, body.messages):
+        async for chunk in run_chat_stream(
+            agent,
+            body.messages,
+            session_id=body.session_id,
+        ):
             yield chunk
 
     return StreamingResponse(generator(), media_type="text/event-stream")

@@ -166,6 +166,18 @@ class AgentSettings(BaseModel):
     stream_version: str = Field(
         default="v2", description="LangGraph event stream version"
     )
+    rate_limit: str = Field(
+        default="10/minute", description="Rate limit for chat endpoints"
+    )
+    max_retries: int = Field(
+        default=3, description="Maximum retry attempts for LLM calls"
+    )
+    retry_wait_seconds: float = Field(
+        default=1.0, description="Base wait seconds for exponential retry backoff"
+    )
+    max_history_messages: int = Field(
+        default=20, description="Maximum number of chat messages to keep per request"
+    )
 
 
 # YAML loader

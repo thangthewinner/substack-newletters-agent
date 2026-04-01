@@ -50,6 +50,10 @@ class ChatMessage(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: list[ChatMessage] = Field(description="Full conversation history")
+    session_id: str | None = Field(
+        default=None,
+        description="Optional conversation session ID for server-side memory",
+    )
 
 
 class ChatResponse(BaseModel):

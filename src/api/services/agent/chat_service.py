@@ -1,8 +1,9 @@
 from collections.abc import AsyncGenerator
-from typing import Protocol
+from typing import Any, Protocol
 
+from langchain.agents import create_agent as create_langchain_agent
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from langgraph.prebuilt import create_react_agent
+from langgraph.checkpoint.memory import MemorySaver
 from sqlalchemy.engine import Engine
 
 from src.api.models.api_models import ChatMessage
@@ -20,22 +21,46 @@ TOOL_CALL_STEP_TAG = ["seq:step:1"]
 class AgentRunnable(Protocol):
     """Protocol for chat agent invocation and streaming interfaces."""
 
-    async def ainvoke(self, input_data: dict) -> dict: ...
+    async def ainvoke(self, input_data: dict, **kwargs: Any) -> dict: ...
 
     def astream_events(
-        self, input_data: dict, version: str
+        self, input_data: dict, version: str, **kwargs: Any
     ) -> AsyncGenerator[dict, None]: ...
 
 
-def build_lc_messages(messages: list[ChatMessage]) -> list[HumanMessage | AIMessage]:
-    """Convert ChatMessage list to LangChain message objects."""
+def build_lc_messages(
+    messages: list[ChatMessage], max_history_messages: int
+) -> list[HumanMessage | AIMessage]:
+    """Convert ChatMessage list to LangChain message objects with history trimming."""
+    if max_history_messages > 0 and len(messages) > max_history_messages:
+        messages = messages[-max_history_messages:]
+
     result: list[HumanMessage | AIMessage] = []
-    for m in messages:
-        if m.role == "user":
-            result.append(HumanMessage(content=m.content))
-        elif m.role == "assistant":
-            result.append(AIMessage(content=m.content))
+    for message in messages:
+        if message.role == "user":
+            result.append(HumanMessage(content=message.content))
+        elif message.role == "assistant":
+            result.append(AIMessage(content=message.content))
     return result
+
+
+def _build_input_payload(
+    messages: list[ChatMessage],
+    session_id: str | None,
+) -> dict[str, list[HumanMessage | AIMessage]]:
+    """Build agent payload, using only latest user message for session mode."""
+    if session_id:
+        for message in reversed(messages):
+            if message.role == "user":
+                return {"messages": [HumanMessage(content=message.content)]}
+        return {"messages": []}
+
+    return {
+        "messages": build_lc_messages(
+            messages=messages,
+            max_history_messages=settings.agent.max_history_messages,
+        )
+    }
 
 
 def create_agent(
@@ -46,32 +71,55 @@ def create_agent(
     """Build and return a LangGraph ReAct agent."""
     llm = create_agent_llm(model)
     tools = create_tools(vectorstore, db_engine)
-    return create_react_agent(
+    return create_langchain_agent(
         llm,
         tools=tools,
-        prompt=SystemMessage(content=SYSTEM_PROMPT),
+        system_prompt=SystemMessage(content=SYSTEM_PROMPT),
+        checkpointer=MemorySaver(),
     )
 
 
 async def run_chat(
     agent: AgentRunnable,
     messages: list[ChatMessage],
+    session_id: str | None = None,
 ) -> str:
     """Run agent non-streaming. Returns final reply string."""
-    lc_messages = build_lc_messages(messages)
-    result = await agent.ainvoke({"messages": lc_messages})
+    payload = _build_input_payload(messages, session_id)
+    if session_id:
+        result = await agent.ainvoke(
+            payload,
+            config={"configurable": {"thread_id": session_id}},
+        )
+    else:
+        result = await agent.ainvoke(payload)
     return result["messages"][-1].content
 
 
 async def run_chat_stream(
     agent: AgentRunnable,
     messages: list[ChatMessage],
+    session_id: str | None = None,
 ) -> AsyncGenerator[str, None]:
     """Run agent with streaming. Yields text chunks."""
-    lc_messages = build_lc_messages(messages)
-    async for event in agent.astream_events(
-        {"messages": lc_messages}, version=settings.agent.stream_version
-    ):
+    payload = _build_input_payload(messages, session_id)
+    if session_id:
+        stream = agent.astream_events(
+            payload,
+            version=settings.agent.stream_version,
+            config={"configurable": {"thread_id": session_id}},
+        )
+    else:
+        stream = agent.astream_events(
+            payload,
+            version=settings.agent.stream_version,
+        )
+
+    async for event in stream:
+        if event["event"] == "on_tool_start":
+            tool_name = event.get("name", "tool")
+            yield f"\n> Using tool: `{tool_name}`...\n"
+
         if (
             event["event"] == "on_chat_model_stream"
             and event.get("tags", []) != TOOL_CALL_STEP_TAG
