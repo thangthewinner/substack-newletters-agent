@@ -30,7 +30,6 @@ from src.models.vectorstore_models import ArticleChunkPayload
 from src.utils.logger_util import log_batch_status, setup_logging
 from src.utils.text_splitter import TextSplitter
 
-
 class AsyncQdrantVectorStore:
     """
     Manages asynchronous interactions with Qdrant vector store for article ingestion.
@@ -51,14 +50,17 @@ class AsyncQdrantVectorStore:
     def __init__(self, cache_dir: str | None = None):
         """Initialize AsyncQdrantVectorStore with Qdrant client and embedding models."""
         vector_db = settings.qdrant
+        dense_model_raw = vector_db.dense_model_name
+        dense_model_stripped = dense_model_raw.strip()
+        sparse_model_stripped = vector_db.sparse_model_name.strip()
 
         # Models & configs
         self.dense_model = TextEmbedding(
-            model_name=vector_db.dense_model_name,
+            model_name=dense_model_stripped,
             cache_dir=cache_dir,  # Only uses cache_dir if provided
         )
         self.sparse_model = SparseTextEmbedding(
-            model_name=vector_db.sparse_model_name,
+            model_name=sparse_model_stripped,
             cache_dir=cache_dir,  # Only uses cache_dir if provided
         )
         self.embedding_size = vector_db.vector_dim
@@ -510,7 +512,7 @@ class AsyncQdrantVectorStore:
             raise RuntimeError("Error generating batch embeddings") from e
 
     async def _article_batch_generator(
-        self, session: Session, from_date: datetime | None = None
+        self, session: Session, from_date: u " nhiều khả năng đến từ môi trường runtime khác (shell export, termdatetime | None = None
     ) -> AsyncGenerator[list[SubstackArticle], None]:
         """
         Yield batches of articles from SQL database.

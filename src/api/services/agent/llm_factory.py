@@ -1,5 +1,4 @@
 from langchain_openai import ChatOpenAI
-from langchain_core.runnables.retry import ExponentialJitterParams
 from pydantic import SecretStr
 
 from src.config import settings
@@ -28,14 +27,6 @@ def create_agent_llm(model: str | None = None):
         model=model or agent_settings.default_model,
         temperature=agent_settings.temperature,
         max_completion_tokens=agent_settings.max_tokens,
+        max_retries=agent_settings.max_retries,
     )
-    return llm.with_retry(
-        stop_after_attempt=agent_settings.max_retries,
-        wait_exponential_jitter=True,
-        exponential_jitter_params=ExponentialJitterParams(
-            initial=agent_settings.retry_wait_seconds,
-            max=agent_settings.retry_wait_seconds * 8,
-            exp_base=2.0,
-            jitter=1.0,
-        ),
-    )
+    return llm

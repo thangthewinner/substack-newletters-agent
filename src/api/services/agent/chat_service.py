@@ -115,15 +115,43 @@ async def run_chat_stream(
             version=settings.agent.stream_version,
         )
 
-    async for event in stream:
-        if event["event"] == "on_tool_start":
-            tool_name = event.get("name", "tool")
-            yield f"\n> Using tool: `{tool_name}`...\n"
+    first_event_logged = False
+    yielded_chunks = 0
+    fallback_emitted = False
+    try:
+        async for event in stream:
+            if not first_event_logged:
+                first_event_logged = True
 
-        if (
-            event["event"] == "on_chat_model_stream"
-            and event.get("tags", []) != TOOL_CALL_STEP_TAG
-        ):
-            chunk = event["data"]["chunk"].content
-            if chunk:
-                yield chunk
+            if event["event"] == "on_tool_start":
+                tool_name = event.get("name", "tool")
+                yield f"\n> Using tool: `{tool_name}`...\n"
+
+            if (
+                event["event"] == "on_chat_model_stream"
+                and event.get("tags", []) != TOOL_CALL_STEP_TAG
+            ):
+                chunk = event["data"]["chunk"].content
+                if chunk:
+                    yielded_chunks += 1
+                    yield chunk
+
+            if event["event"] == "on_chain_end":
+                output_data = event.get("data", {}).get("output")
+                fallback_reply: str | None = None
+                if isinstance(output_data, dict):
+                    messages_data = output_data.get("messages")
+                    if isinstance(messages_data, list):
+                        if yielded_chunks == 0 and not fallback_emitted:
+                            for msg in reversed(messages_data):
+                                if isinstance(msg, AIMessage):
+                                    content = msg.content
+                                    if isinstance(content, str) and content.strip():
+                                        fallback_reply = content
+                                        break
+                if fallback_reply is not None:
+                    fallback_emitted = True
+                    yield fallback_reply
+    except Exception as exc:
+        logger.exception(f"Error while streaming chat response: {exc}")
+        raise

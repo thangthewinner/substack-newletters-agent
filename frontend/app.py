@@ -34,6 +34,26 @@ def stream_chat(
         yield f"Error: {exc}"
 
 
+def run_chat_once(messages: list[dict[str, str]]) -> str:
+    """Non-streaming chat request used to avoid Gradio stream wrapper errors."""
+    payload = {
+        "messages": messages,
+        "session_id": SESSION_ID,
+    }
+    try:
+        response = requests.post(
+            f"{API_BASE_URL}/chat",
+            json=payload,
+            timeout=90,
+        )
+        response.raise_for_status()
+        body = response.json()
+        reply = body.get("reply", "")
+        return str(reply)
+    except requests.RequestException as exc:
+        return f"Error: {exc}"
+
+
 def build_messages(
     history: list[dict[str, str] | tuple[str | None, str | None] | list[str | None]],
     message: str,
@@ -60,18 +80,13 @@ def build_messages(
 def chat(
     message: str,
     history: list[dict[str, str] | tuple[str | None, str | None] | list[str | None]],
-) -> Generator[str, None, None]:
-    """Handle chat messages with streaming response."""
+) -> str:
+    """Handle chat messages with non-streaming response."""
     if not message.strip():
-        yield "Please enter a message."
-        return
+        return "Please enter a message."
 
     messages = build_messages(history, message)
-
-    response = ""
-    for chunk in stream_chat(messages):
-        response += chunk
-        yield response
+    return run_chat_once(messages)
 
 
 with gr.Blocks(title="Substack Chatbot", theme=gr.themes.Soft()) as demo:
