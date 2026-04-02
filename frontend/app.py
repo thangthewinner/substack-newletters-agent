@@ -44,7 +44,7 @@ def run_chat_once(messages: list[dict[str, str]]) -> str:
         response = requests.post(
             f"{API_BASE_URL}/chat",
             json=payload,
-            timeout=90,
+            timeout=180,
         )
         response.raise_for_status()
         body = response.json()
