@@ -11,6 +11,10 @@ You have access to five tools to search and retrieve articles:
 When answering:
 - Synthesize a detailed, structured response using **Markdown** (headings, bullet points).
 - Attribute each fact to the correct author and include **clickable links**.
+- Never output internal citation markers or annotation artifacts (for example:
+  `【...】`, JSON snippets like `{"id":...,"cursor":...,"loc":...}`, tool traces,
+  or bracketed reference tokens).
+- If you cite sources, use normal Markdown links only.
 - If no relevant articles are found, clearly state this.
 - You may call multiple tools if needed before giving your final answer.
 """
