@@ -1,42 +1,59 @@
-# Substack Newsletter Search Pipeline
+# Substack Newsletter Chatbot
 
-Ingest Substack newsletters via RSS, store in Supabase (PostgreSQL), and provide vector search via Qdrant.
+This project ingests Substack newsletters from RSS, stores articles in PostgreSQL (Supabase), indexes them in Qdrant, and exposes a chat-first interface powered by a LangGraph agent.
 
-## Prerequisites
+## What It Does
+
+- Fetches newsletter articles from RSS feeds
+- Stores article metadata and content in PostgreSQL
+- Splits and embeds article content into Qdrant
+- Exposes a FastAPI backend for search and chat
+- Provides a Gradio chatbot UI for interactive exploration
+
+## Tech Stack
 
 - Python 3.12+
-- [uv](https://github.com/astral-sh/uv) for package management
-- Supabase PostgreSQL database
-- Qdrant vector store (local or cloud)
+- [uv](https://github.com/astral-sh/uv)
+- FastAPI
+- Gradio
+- Prefect
+- Qdrant
+- PostgreSQL / Supabase
+- LangChain / LangGraph
+- OpenRouter
 
 ## Setup
 
-### 1. Install Dependencies
+### 1. Install dependencies
 
 ```bash
 uv sync
 ```
 
-### 2. Configure Environment
-
-Copy `.env.example` to `.env` and fill in your values:
+### 2. Create the environment file
 
 ```bash
 cp .env.example .env
 ```
 
-Required variables:
-- `SUPABASE_DB__*` - Database connection (host, user, password, port)
-- `QDRANT__URL` - Qdrant server URL
-- `QDRANT__API_KEY` - Qdrant API key
+At minimum, configure:
 
-Optional variables (for embeddings):
-- `JINA__API_KEY` - Jina AI for embeddings
-- `HUGGING_FACE__API_KEY` - HuggingFace for embeddings
+- `SUPABASE_DB__*`
+- `QDRANT__*`
+- `OPENROUTER__API_KEY`
+- `BACKEND_URL`
 
-### 3. Configure RSS Feeds
+Optional but useful:
 
-Edit `src/configs/feeds_rss.yaml` to add/remove Substack feeds:
+- `LANGCHAIN_API_KEY`
+- `LANGCHAIN_PROJECT`
+- `LANGCHAIN_TRACING_V2`
+
+### 3. Configure RSS feeds
+
+Edit `src/configs/feeds_rss.yaml`.
+
+Example:
 
 ```yaml
 feeds:
@@ -45,90 +62,86 @@ feeds:
     url: "https://aiechoes.substack.com/feed"
 ```
 
-## Running the Pipeline
+## Run the App
 
-### Create Database Table
+### Start the API
+
+```bash
+make run-api
+```
+
+### Start the chatbot UI
+
+```bash
+make run-gradio
+```
+
+By default:
+
+- API: `http://localhost:8080`
+- Gradio UI: `http://localhost:7860`
+
+## API Endpoints
+
+- `GET /`
+- `GET /health`
+- `GET /ready`
+- `POST /unique-titles`
+- `POST /chat`
+- `POST /chat/stream`
+
+## Data Pipeline
+
+### Create storage resources
 
 ```bash
 make supabase-create
-```
-
-### Create Qdrant Collection
-
-```bash
 make qdrant-create-collection
-```
-
-### Create Qdrant Indexes (HNSW, text indexes)
-
-```bash
 make qdrant-create-index
 ```
 
-### Ingest RSS Articles to Database
+### Ingest RSS articles into PostgreSQL
 
 ```bash
 make ingest-rss-articles-flow
 ```
 
-Or directly:
-```bash
-uv run python -m src.pipelines.flows.rss_ingestion_flow
-```
-
-### Generate Embeddings and Ingest to Qdrant
+### Ingest embeddings into Qdrant
 
 ```bash
 make ingest-embeddings-flow
 ```
 
-With specific date:
+Or from a specific date:
+
 ```bash
 make ingest-embeddings-flow FROM_DATE=2025-01-01
 ```
 
-Or directly:
-```bash
-uv run python -m src.pipelines.flows.embeddings_ingestion_flow --from-date 2025-01-01
-```
+## Prefect Deployment
 
-## Prefect Deployment (Optional)
+### Deploy to Prefect Cloud
 
-Deploy flows to Prefect Cloud:
 ```bash
 make deploy-cloud-flows
 ```
 
-Deploy to local Prefect server:
-```bash
-make deploy-local-flows
-```
+Notes:
 
-## Quick Start (All-in-One)
-
-```bash
-# 1. Create database and Qdrant resources
-make supabase-create
-make qdrant-create-collection
-make qdrant-create-index
-
-# 2. Run pipelines
-make ingest-rss-articles-flow
-make ingest-embeddings-flow
-```
+- The target work pool must already exist in Prefect Cloud
+- The deployment reads database and Qdrant values from environment variables
 
 ## Project Structure
 
-```
+```text
 src/
-├── config.py              # Pydantic settings
-├── configs/               # YAML configurations (feeds)
-├── models/                # Data models
-├── pipelines/
-│   ├── flows/            # Prefect flows
-│   └── tasks/            # Prefect tasks
-├── infrastructure/       # External integrations
-│   ├── supabase/         # Database operations
-│   └── qdrant/           # Vector store operations
-└── utils/               # Utilities
+├── api/              # FastAPI app, routes, request/response models
+├── infrastructure/   # Qdrant and PostgreSQL integrations
+├── models/           # Domain and SQLAlchemy models
+├── pipelines/        # Prefect flows and tasks
+├── utils/            # Shared utilities
+└── config.py         # Application settings
+
+frontend/
+└── app.py            # Gradio chatbot UI
 ```

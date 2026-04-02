@@ -133,7 +133,7 @@ class OpenAISettings(BaseModel):
 
 # OpenRouter Settings
 class OpenRouterSettings(BaseModel):
-    """Settings for OpenRouter API for embeddings."""
+    """Settings for OpenRouter API access."""
 
     api_key: str = Field(default="", description="OpenRouter API key")
     api_url: str = Field(
@@ -141,13 +141,42 @@ class OpenRouterSettings(BaseModel):
     )
 
 
-# Opik Observability Settings
-class OpikObservabilitySettings(BaseModel):
-    """Settings for Opik observability/monitoring."""
+# LangSmith Observability Settings
+class LangSmithSettings(BaseModel):
+    """Settings for LangSmith observability."""
 
-    api_key: str = Field(default="", description="Opik Observability API key")
-    project_name: str = Field(
-        default="substack-pipeline", description="Opik project name"
+    api_key: str = Field(default="", description="LangSmith API key")
+    project: str = Field(
+        default="substack-chatbot", description="LangSmith project name"
+    )
+    tracing_v2: bool = Field(default=False, description="Enable LangSmith tracing")
+
+
+class AgentSettings(BaseModel):
+    """Settings for agent runtime behavior."""
+
+    default_model: str = Field(
+        default="nvidia/nemotron-3-super-120b-a12b:free",
+        description="Default OpenRouter model for the chat agent",
+    )
+    temperature: float = Field(default=0.0, description="Sampling temperature")
+    max_tokens: int = Field(
+        default=5000, description="Maximum completion tokens for chat responses"
+    )
+    stream_version: str = Field(
+        default="v2", description="LangGraph event stream version"
+    )
+    rate_limit: str = Field(
+        default="10/minute", description="Rate limit for chat endpoints"
+    )
+    max_retries: int = Field(
+        default=3, description="Maximum retry attempts for LLM calls"
+    )
+    retry_wait_seconds: float = Field(
+        default=1.0, description="Base wait seconds for exponential retry backoff"
+    )
+    max_history_messages: int = Field(
+        default=20, description="Maximum number of chat messages to keep per request"
     )
 
 
@@ -181,7 +210,8 @@ class Settings(BaseSettings):
     hugging_face: HuggingFaceSettings = Field(default_factory=HuggingFaceSettings)
     openai: OpenAISettings = Field(default_factory=OpenAISettings)
     openrouter: OpenRouterSettings = Field(default_factory=OpenRouterSettings)
-    opik: OpikObservabilitySettings = Field(default_factory=OpikObservabilitySettings)
+    langsmith: LangSmithSettings = Field(default_factory=LangSmithSettings)
+    agent: AgentSettings = Field(default_factory=AgentSettings)
 
     rss_config_yaml_path: str = "src/configs/feeds_rss.yaml"
 

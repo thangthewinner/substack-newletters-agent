@@ -27,9 +27,14 @@ def init_engine() -> Engine:
             logger.error(
                 "Incomplete database configuration: ensure all Supabase settings are provided"
             )
+            raise ValueError(
+                "Incomplete database configuration: ensure all Supabase settings are provided"
+            )
         logger.info(f"Connecting to database {db.name} at {db.host}: {db.port}")
         engine_url = f"postgresql://{db.user}:{db.password.get_secret_value()}@{db.host}:{db.port}/{db.name}"
-        logger.debug(f"Using engine URL: {engine_url}")
+        logger.debug(
+            f"Using engine URL: postgresql://{db.user}:***@{db.host}:{db.port}/{db.name}"
+        )
 
         # Create the engine with connection pooling options for robustness
         engine = create_engine(

@@ -79,9 +79,7 @@ def rss_ingest_flow(article_model: type[SubstackArticle] = SubstackArticle) -> N
                 count = len(fetched_articles)
                 per_feed_counts[feed.name] = count
                 total_ingested += count
-                logger.info(
-                    f"Feed '{feed.name}': {count} articles ready for ingestion"
-                )
+                logger.info(f"Feed '{feed.name}': {count} articles ready for ingestion")
 
                 task_result = ingest_from_rss.submit(
                     fetched_articles,

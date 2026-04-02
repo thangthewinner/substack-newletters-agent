@@ -30,7 +30,6 @@ from src.models.vectorstore_models import ArticleChunkPayload
 from src.utils.logger_util import log_batch_status, setup_logging
 from src.utils.text_splitter import TextSplitter
 
-
 class AsyncQdrantVectorStore:
     """
     Manages asynchronous interactions with Qdrant vector store for article ingestion.
@@ -51,14 +50,17 @@ class AsyncQdrantVectorStore:
     def __init__(self, cache_dir: str | None = None):
         """Initialize AsyncQdrantVectorStore with Qdrant client and embedding models."""
         vector_db = settings.qdrant
+        dense_model_raw = vector_db.dense_model_name
+        dense_model_stripped = dense_model_raw.strip()
+        sparse_model_stripped = vector_db.sparse_model_name.strip()
 
         # Models & configs
         self.dense_model = TextEmbedding(
-            model_name=vector_db.dense_model_name,
+            model_name=dense_model_stripped,
             cache_dir=cache_dir,  # Only uses cache_dir if provided
         )
         self.sparse_model = SparseTextEmbedding(
-            model_name=vector_db.sparse_model_name,
+            model_name=sparse_model_stripped,
             cache_dir=cache_dir,  # Only uses cache_dir if provided
         )
         self.embedding_size = vector_db.vector_dim
@@ -654,7 +656,7 @@ class AsyncQdrantVectorStore:
                             collection_name=self.collection_name,
                             points=Batch(
                                 ids=sub_ids,  # type: ignore
-                                payloads=[p.dict() for p in sub_payloads],
+                                payloads=[p.model_dump() for p in sub_payloads],
                                 vectors={"Dense": dense_vecs, "Sparse": sparse_vecs},  # type: ignore
                             ),
                         )

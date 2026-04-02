@@ -85,6 +85,7 @@ def fetch_rss_entries(
                 if raw_html:
                     try:
                         html_soup = BeautifulSoup(raw_html, "html.parser")
+                        is_paywalled = False
                         for a in html_soup.find_all("a", href=True):
                             if (
                                 a["href"].strip() == link
@@ -93,9 +94,10 @@ def fetch_rss_entries(
                                 logger.info(
                                     f"Paywalled/truncated article skipped: '{title}'"
                                 )
-                                raise StopIteration
-                    except StopIteration:
-                        continue
+                                is_paywalled = True
+                                break
+                        if is_paywalled:
+                            continue
                     except Exception as e:
                         logger.warning(f"Failed to inspect links for '{title}': {e}")
 

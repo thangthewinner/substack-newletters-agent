@@ -1,20 +1,20 @@
-import asyncio
-
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from src.api.models.api_models import (
-    AskRequest,
-    AskResponse,
-    AskStreamingResponse,
-    SearchResult,
+    ChatRequest,
+    ChatResponse,
     UniqueTitleRequest,
     UniqueTitleResponse,
 )
-from src.api.services.generation_service import generate_answer, get_streaming_function
-from src.api.services.search_service import query_unique_titles, query_with_filters
+from src.api.services.agent.chat_service import run_chat, run_chat_stream
+from src.api.services.search_service import query_unique_titles
+from src.config import settings
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post("/unique-titles", response_model=UniqueTitleResponse)
@@ -32,8 +32,9 @@ async def search_unique(request: Request, params: UniqueTitleRequest):
         UniqueTitleResponse: List of unique titles.
 
     """
+    vectorstore = request.app.state.vectorstore
     results = await query_unique_titles(
-        request=request,
+        vectorstore=vectorstore,
         query_text=params.query_text,
         feed_author=params.feed_author,
         feed_name=params.feed_name,
@@ -43,84 +44,47 @@ async def search_unique(request: Request, params: UniqueTitleRequest):
     return {"results": results}
 
 
-@router.post("/ask", response_model=AskResponse)
-async def ask_with_generation(request: Request, ask: AskRequest):
+@router.post("/chat", response_model=ChatResponse)
+@limiter.limit(settings.agent.rate_limit)
+async def chat(request: Request, body: ChatRequest):
     """
-    Non-streaming question-answering endpoint using vector search and LLM.
-
-    Workflow:
-        1. Retrieve relevant documents (possibly duplicate titles for richer context).
-        2. Generate an answer with the selected LLM provider.
+    Chat endpoint using LangGraph ReAct agent.
 
     Args:
         request: FastAPI request object.
-        ask: AskRequest with query, provider, and limit.
+        body: ChatRequest with conversation history.
 
     Returns:
-        AskResponse: Generated answer and source documents.
+        ChatResponse: Agent's final answer in Markdown.
 
     """
-    # Step 1: Retrieve relevant documents with filters
-    results: list[SearchResult] = await query_with_filters(
-        request,
-        query_text=ask.query_text,
-        feed_author=ask.feed_author,
-        feed_name=ask.feed_name,
-        title_keywords=ask.title_keywords,
-        limit=ask.limit,
-    )
-
-    # Step 2: Generate an answer
-    answer_data = await generate_answer(
-        query=ask.query_text, contexts=results, provider=ask.provider, selected_model=ask.model
-    )
-
-    return AskResponse(
-        query=ask.query_text,
-        provider=ask.provider,
-        answer=answer_data["answer"],
-        sources=results,
-        model=answer_data.get("model", None),
-        finish_reason=answer_data.get("finish_reason", None),
-    )
+    agent = request.app.state.agent
+    reply = await run_chat(agent, body.messages, session_id=body.session_id)
+    return ChatResponse(reply=reply)
 
 
-@router.post("/ask/stream", response_model=AskStreamingResponse)
-async def ask_with_generation_stream(request: Request, ask: AskRequest):
+@router.post("/chat/stream")
+@limiter.limit(settings.agent.rate_limit)
+async def chat_stream(request: Request, body: ChatRequest):
     """
-    Streaming question-answering endpoint using vector search and LLM.
-
-    Workflow:
-        1. Retrieve relevant documents (possibly duplicate titles for richer context).
-        2. Stream generated answer with the selected LLM provider.
+    Streaming chat endpoint using LangGraph ReAct agent.
 
     Args:
         request: FastAPI request object.
-        ask: AskRequest with query, provider, and limit.
+        body: ChatRequest with conversation history.
 
     Returns:
-        StreamingResponse: Yields text chunks as plain text.
+        StreamingResponse: Yields text chunks as text/event-stream.
 
     """
-    # Step 1: Retrieve relevant documents with filters
-    results: list[SearchResult] = await query_with_filters(
-        request,
-        query_text=ask.query_text,
-        feed_author=ask.feed_author,
-        feed_name=ask.feed_name,
-        title_keywords=ask.title_keywords,
-        limit=ask.limit,
-    )
+    agent = request.app.state.agent
 
-    # Step 2: Get the streaming generator
-    stream_func = get_streaming_function(
-        provider=ask.provider, query=ask.query_text, contexts=results, selected_model=ask.model
-    )
+    async def generator():
+        async for chunk in run_chat_stream(
+            agent,
+            body.messages,
+            session_id=body.session_id,
+        ):
+            yield chunk
 
-    # Step 3: Wrap streaming generator
-    async def stream_generator():
-        async for delta in stream_func():
-            yield delta
-            await asyncio.sleep(0)  # allow event loop to handle other tasks
-
-    return StreamingResponse(stream_generator(), media_type="text/plain")
+    return StreamingResponse(generator(), media_type="text/event-stream")

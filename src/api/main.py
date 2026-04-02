@@ -6,6 +6,9 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from qdrant_client.http.exceptions import UnexpectedResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from src.api.exceptions.exception_handlers import (
     general_exception_handler,
@@ -14,8 +17,11 @@ from src.api.exceptions.exception_handlers import (
 )
 from src.api.middleware.logging_middleware import LoggingMiddleware
 from src.api.routes.health_routes import router as health_router
-from src.api.routes.search_routes import router as search_router
+from src.api.routes.search_routes import limiter as chat_limiter
+from src.api.routes.search_routes import router as chat_router
+from src.api.services.agent.chat_service import create_agent
 from src.infrastructure.qdrant.qdrant_vectorstore import AsyncQdrantVectorStore
+from src.infrastructure.supabase.init_session import init_engine
 from src.utils.logger_util import setup_logging
 
 dotenv.load_dotenv()
@@ -23,6 +29,7 @@ dotenv.load_dotenv()
 
 # Logger setup
 logger = setup_logging()
+
 
 # Lifespan
 @asynccontextmanager
@@ -53,14 +60,27 @@ async def lifespan(app: FastAPI):
     try:
         # creates Qdrant client internally
         app.state.vectorstore = AsyncQdrantVectorStore(cache_dir=cache_dir)
-    except Exception as e:
-        logger.exception("Failed to initialize QdrantVectorStore")
-        raise e
+
+        # Initialize DB engine once and reuse across requests.
+        app.state.db_engine = init_engine()
+
+        # Build agent once and reuse across requests.
+        app.state.agent = create_agent(
+            vectorstore=app.state.vectorstore,
+            db_engine=app.state.db_engine,
+        )
+    except Exception:
+        logger.exception("Failed to initialize application state")
+        raise
     yield
     try:
         await app.state.vectorstore.client.close()
     except Exception:
         logger.exception("Failed to close Qdrant client")
+    try:
+        app.state.db_engine.dispose()
+    except Exception:
+        logger.exception("Failed to dispose DB engine")
 
 
 # FastAPI application
@@ -72,6 +92,7 @@ app = FastAPI(
     # root_path=root_path,
 )
 
+app.state.limiter = chat_limiter
 
 # Middleware
 # Log the allowed origins
@@ -87,15 +108,24 @@ app.add_middleware(
 )
 
 app.add_middleware(LoggingMiddleware)
+app.add_middleware(SlowAPIMiddleware)
+
+
+def rate_limit_exception_handler(request, exc: Exception):
+    """Handle rate limit exceptions with slowapi default response."""
+    if isinstance(exc, RateLimitExceeded):
+        return _rate_limit_exceeded_handler(request, exc)
+    raise exc
 
 
 # Exception Handlers
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(UnexpectedResponse, qdrant_exception_handler)
+app.add_exception_handler(RateLimitExceeded, rate_limit_exception_handler)
 app.add_exception_handler(Exception, general_exception_handler)
 
 # Routers
-app.include_router(search_router, prefix="/search", tags=["search"])
+app.include_router(chat_router, tags=["chat"])
 app.include_router(health_router, tags=["health"])
 
 # For Cloud Run, run the app directly
