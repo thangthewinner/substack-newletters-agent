@@ -3,6 +3,7 @@ from pydantic import SecretStr
 
 from src.config import settings
 
+
 def create_agent_llm(model: str | None = None):
     """
     Initialize a ChatOpenAI instance routed through OpenRouter.

@@ -52,5 +52,6 @@ async def ingest_qdrant(from_date: datetime | None = None):
         # Cleanup resources
         session.close()
         await vectorstore.client.close()
+        engine.dispose()
         gc.collect()
         logger.info("Qdrant ingestion task complete and resources cleaned up")

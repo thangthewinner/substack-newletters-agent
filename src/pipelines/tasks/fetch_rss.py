@@ -60,7 +60,7 @@ def fetch_rss_entries(
         soup = BeautifulSoup(response.content, "xml")
         rss_items = soup.find_all("item")
 
-        for _, item in enumerate(rss_items):
+        for item in rss_items:
             try:
                 link = (
                     item.find("link").get_text(strip=True) if item.find("link") else ""
@@ -80,6 +80,7 @@ def fetch_rss_entries(
                 # Prefer full text in <content:encoded>
                 content_elem = item.find("content:encoded") or item.find("description")
                 raw_html = content_elem.get_text() if content_elem else ""
+                content_md = ""  # init early to avoid UnboundLocalError if raw_html is empty
 
                 # Skip if article contains a self-referencing "Read more" link
                 if raw_html:

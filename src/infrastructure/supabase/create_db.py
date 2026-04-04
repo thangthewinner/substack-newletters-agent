@@ -39,7 +39,7 @@ def create_table() -> None:
         if table_name in existing_tables:
             logger.info(f"Table '{table_name}' already exists. No action needed.")
         else:
-            logger.info(f"Table '{table_name}' does not exists. Creating...")
+            logger.info(f"Table '{table_name}' does not exist. Creating...")
             # Create all tables defined in Base.metadata (includes SubstackArticle)
             Base.metadata.create_all(bind=engine)
             logger.info(f"Table '{table_name}' created successfully.")

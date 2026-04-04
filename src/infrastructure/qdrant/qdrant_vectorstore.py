@@ -138,7 +138,7 @@ class AsyncQdrantVectorStore:
                 raise RuntimeError("Failed to check collection existence") from e
 
         try:
-            self.logger.info("Creating Qdrant collection: {}", self.collection_name)
+            self.logger.info(f"Creating Qdrant collection: {self.collection_name}")
             await self.client.create_collection(
                 collection_name=self.collection_name,
                 vectors_config={
@@ -216,10 +216,8 @@ class AsyncQdrantVectorStore:
         """
         try:
             self.logger.info(
-                "Enabling HNSW for collection '{}' with m={} and indexing_threshold={}",
-                self.collection_name,
-                m,
-                indexing_threshold,
+                f"Enabling HNSW for collection '{self.collection_name}' "
+                f"with m={m} and indexing_threshold={indexing_threshold}"
             )
             await self.client.update_collection(
                 collection_name=self.collection_name,

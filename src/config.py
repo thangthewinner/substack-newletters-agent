@@ -238,7 +238,9 @@ class Settings(BaseSettings):
         """
         yaml_feeds = load_yaml_feeds(self.rss_config_yaml_path)
         if yaml_feeds:
-            self.rss.feeds = yaml_feeds
+            # Use object.__setattr__ + model_copy() to safely update the frozen Settings.
+            # Direct attribute assignment on the sub-model violates the frozen=True contract.
+            object.__setattr__(self, "rss", self.rss.model_copy(update={"feeds": yaml_feeds}))
         return self
 
 

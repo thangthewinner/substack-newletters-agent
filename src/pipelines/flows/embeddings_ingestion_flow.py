@@ -1,6 +1,6 @@
 import argparse
 import asyncio
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 
 from dateutil import parser
 from prefect import flow, get_client
@@ -45,7 +45,7 @@ async def get_last_successful_run(flow_name: str) -> datetime | None:
                 logger.info(f"No flow found with exact name: {flow_name}")
                 return None
 
-            logger.info(f"Exact flow found: {exact_flow.id} ({exact_flow.id})")
+            logger.info(f"Exact flow found: {exact_flow.id} ({exact_flow.name})")
 
             # Step 2: get recent completed runs
             flow_runs = await client.read_flow_runs(
@@ -117,7 +117,6 @@ async def qdrant_ingest_flow(from_date: str | None = None) -> None:
             from_date_dt = (
                 last_run_date
                 or parser.parse(rss.default_start_date).replace(tzinfo=UTC)
-                or (datetime.now(UTC) - timedelta(days=30))
             )
             logger.info(f"Using fallback from_date: {from_date_dt}")
 

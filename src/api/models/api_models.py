@@ -12,7 +12,7 @@ class SearchResult(BaseModel):
         default=None, description="List of article authors"
     )
     url: str | None = Field(
-        default=None, description="Text content of the article chunk"
+        default=None, description="URL of the article"
     )
     chunk_text: str | None = Field(
         default=None, description="Text content of the article chunk"

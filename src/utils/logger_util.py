@@ -8,6 +8,9 @@ from prefect.context import get_run_context
 from prefect.logging import get_run_logger
 
 
+_loguru_configured = False
+
+
 def setup_logging(log_level: str | None = None):
     """
     Returns a logger configured for the current environment.
@@ -23,6 +26,7 @@ def setup_logging(log_level: str | None = None):
         logging.Logger | loguru.Logger: Configured logger instance.
 
     """
+    global _loguru_configured
     log_level = log_level or os.getenv("LOG_LEVEL", "DEBUG").upper()
 
     try:
@@ -33,19 +37,21 @@ def setup_logging(log_level: str | None = None):
         logger.debug(f"Logging initialized at {log_level} level (Prefect).")
         return logger
     except RuntimeError:
-        # Outside prefect
-        loguru_logger.remove()
-        loguru_logger.add(
-            sys.stdout,
-            level=log_level,
-            colorize=True,
-            backtrace=True,
-            diagnose=True,
-            format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
-            "<level>{level}</level> | <cyan>{module}</cyan>:<cyan>{function}</cyan> - "
-            "<level>{message}</level>",
-        )
-        loguru_logger.debug(f"Logging initialized at {log_level} level (Loguru).")
+        # Outside prefect — configure loguru only once to avoid global state mutation
+        if not _loguru_configured:
+            loguru_logger.remove()
+            loguru_logger.add(
+                sys.stdout,
+                level=log_level,
+                colorize=True,
+                backtrace=True,
+                diagnose=True,
+                format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
+                "<level>{level}</level> | <cyan>{module}</cyan>:<cyan>{function}</cyan> - "
+                "<level>{message}</level>",
+            )
+            loguru_logger.debug(f"Logging initialized at {log_level} level (Loguru).")
+            _loguru_configured = True
         return loguru_logger
 
 

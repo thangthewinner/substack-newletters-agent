@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field, HttpUrl
 
@@ -30,10 +30,10 @@ class ArticleChunkPayload(BaseModel):
     title: str = Field(default="", description="Title of the article")
     url: HttpUrl | str | None = Field(default=None, description="URL of the article")
     published_at: datetime | str = Field(
-        default_factory=datetime.now, description="Publication date of the article"
+        default_factory=lambda: datetime.now(UTC), description="Publication date of the article"
     )
     created_at: datetime | str = Field(
-        default_factory=datetime.now, description="Creation date of the article"
+        default_factory=lambda: datetime.now(UTC), description="Creation date of the article"
     )
     chunk_index: int = Field(default=0, description="Index of the article chunk")
     chunk_text: str | None = Field(
