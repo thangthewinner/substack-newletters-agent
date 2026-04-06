@@ -1,3 +1,4 @@
+"""Health Routes."""
 import time
 
 from fastapi import APIRouter, Request
@@ -10,8 +11,7 @@ start_time = time.time()
 
 @router.get("/")
 async def root():
-    """
-    Root endpoint.
+    """Root endpoint.
 
     Returns a simple JSON response indicating that the API is running.
 
@@ -24,8 +24,7 @@ async def root():
 
 @router.get("/health")
 async def health_check():
-    """
-    Liveness check endpoint.
+    """Liveness check endpoint.
 
     Returns basic service info, uptime, and environment variables.
     """
@@ -38,8 +37,7 @@ async def health_check():
 
 @router.get("/ready")
 async def readiness_check(request: Request):
-    """
-    Readiness check endpoint.
+    """Readiness check endpoint.
 
     Verifies whether the service is ready to handle requests by
     checking connectivity to Qdrant.

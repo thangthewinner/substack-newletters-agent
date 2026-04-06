@@ -1,3 +1,4 @@
+"""Init Session."""
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
@@ -10,8 +11,7 @@ logger = setup_logging()
 
 
 def init_engine() -> Engine:
-    """
-    Initialize the SQLAlchemy engine for Supabase Postgres.
+    """Initialize the SQLAlchemy engine for Supabase Postgres.
 
     Returns:
         Engine: The SQLAlchemy engine instance.
@@ -20,6 +20,7 @@ def init_engine() -> Engine:
         ValueError: If database configuration is missing or invalid.
         OperationalError: If the database connection fails.
         SQLAlchemyError: For other SQLAlchemy-related errors during engine creation.
+
     """
     try:
         db = settings.supabase_db

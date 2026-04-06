@@ -1,3 +1,4 @@
+"""System Prompt."""
 SYSTEM_PROMPT = """
 You are a skilled research assistant specialized in analyzing Substack newsletters.
 

@@ -10,3 +10,4 @@ __pycache__/
 .antigravity/
 .cursor/
 docs/
+tests/

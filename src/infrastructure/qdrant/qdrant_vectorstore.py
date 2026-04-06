@@ -1,3 +1,4 @@
+"""Qdrant Vectorstore."""
 import asyncio
 import gc
 import hashlib
@@ -30,9 +31,9 @@ from src.models.vectorstore_models import ArticleChunkPayload
 from src.utils.logger_util import log_batch_status, setup_logging
 from src.utils.text_splitter import TextSplitter
 
+
 class AsyncQdrantVectorStore:
-    """
-    Manages asynchronous interactions with Qdrant vector store for article ingestion.
+    """Manages asynchronous interactions with Qdrant vector store for article ingestion.
 
     Initializes Qdrant client, embedding models, and configurations for dense and sparse
     vector storage. Handles collection creation, indexing, and ingestion from SQL.
@@ -105,8 +106,7 @@ class AsyncQdrantVectorStore:
 
     # Collection management
     async def create_collection(self) -> None:
-        """
-        Create Qdrant collection if it does not exist.
+        """Create Qdrant collection if it does not exist.
 
         Checks for existing collection and creates a new one with dense and sparse vector
         configurations if needed. Logs errors and skips if collection exists.
@@ -161,8 +161,7 @@ class AsyncQdrantVectorStore:
             raise RuntimeError("Error creating Qdrant collection") from e
 
     async def delete_collection(self) -> None:
-        """
-        Delete Qdrant collection after user confirmation.
+        """Delete Qdrant collection after user confirmation.
 
         Prompts user to confirm deletion to prevent accidental data loss. Logs errors and
         skips if canceled.
@@ -197,8 +196,7 @@ class AsyncQdrantVectorStore:
 
     # Update collection to enable HNSW
     async def enable_hnsw(self, m: int = 16, indexing_threshold: int = 20000) -> None:
-        """
-        Enable HNSW indexing for the Qdrant collection.
+        """Enable HNSW indexing for the Qdrant collection.
 
         Updates collection to enable HNSW graph with specified parameters.
 
@@ -240,8 +238,7 @@ class AsyncQdrantVectorStore:
 
     # Indexes
     async def create_feed_author_index(self) -> None:
-        """
-        Create keyword index for feed_author field.
+        """Create keyword index for feed_author field.
 
         Returns:
             None
@@ -266,8 +263,7 @@ class AsyncQdrantVectorStore:
             raise RuntimeError("Error creating feed_author index") from e
 
     async def create_article_authors_index(self) -> None:
-        """
-        Create keyword index for article_authors field.
+        """Create keyword index for article_authors field.
 
         Returns:
             None
@@ -296,8 +292,7 @@ class AsyncQdrantVectorStore:
             raise RuntimeError("Error creating article_authors index") from e
 
     async def create_article_feed_name_index(self) -> None:
-        """
-        Create keyword index for feed_name field.
+        """Create keyword index for feed_name field.
 
         Returns:
             None
@@ -322,8 +317,7 @@ class AsyncQdrantVectorStore:
             raise RuntimeError("Error creating feed_name index") from e
 
     async def create_title_index(self) -> None:
-        """
-        Create text index for title field with Snowball stemmer.
+        """Create text index for title field with Snowball stemmer.
 
         Returns:
             None
@@ -356,8 +350,7 @@ class AsyncQdrantVectorStore:
 
     # Embeddings
     def jina_dense_vectors(self, texts: list[str]) -> list[list[float]]:
-        """
-        Generate dense vectors using Jina API.
+        """Generate dense vectors using Jina API.
 
         Args:
             texts (list[str]): List of text strings to embed.
@@ -393,8 +386,7 @@ class AsyncQdrantVectorStore:
             raise
 
     def hf_dense_vectors(self, texts: list[str]) -> list[list[float]]:
-        """
-        Generate dense vectors using Hugging Face Inference API.
+        """Generate dense vectors using Hugging Face Inference API.
 
         Args:
             texts (list[str]): List of text strings to embed.
@@ -417,8 +409,7 @@ class AsyncQdrantVectorStore:
             raise
 
     def dense_vectors(self, texts: list[str]) -> list[list[float]]:
-        """
-        Generate dense vectors using configured model (Jina, Hugging Face, or local).
+        """Generate dense vectors using configured model (Jina, Hugging Face, or local).
 
         Args:
             texts (list[str]): List of text strings to embed.
@@ -441,8 +432,7 @@ class AsyncQdrantVectorStore:
             raise
 
     def sparse_vectors(self, texts: list[str]) -> list[SparseVector]:
-        """
-        Generate sparse vectors using sparse embedding model.
+        """Generate sparse vectors using sparse embedding model.
 
         Args:
             texts (list[str]): List of text strings to embed.
@@ -469,8 +459,7 @@ class AsyncQdrantVectorStore:
     async def embed_batch_async(
         self, texts: list[str]
     ) -> tuple[list[list[float]], list[SparseVector]]:
-        """
-        Generate dense and sparse embeddings concurrently for a batch of texts.
+        """Generate dense and sparse embeddings concurrently for a batch of texts.
 
         Args:
             texts (list[str]): List of text strings to embed.
@@ -512,8 +501,7 @@ class AsyncQdrantVectorStore:
     async def _article_batch_generator(
         self, session: Session, from_date: datetime | None = None
     ) -> AsyncGenerator[list[SubstackArticle], None]:
-        """
-        Yield batches of articles from SQL database.
+        """Yield batches of articles from SQL database.
 
         Args:
             session (Session): SQLAlchemy session for querying articles.
@@ -549,8 +537,7 @@ class AsyncQdrantVectorStore:
     async def ingest_from_sql(
         self, session: Session, from_date: datetime | None = None
     ):
-        """
-        Ingest articles from SQL database into Qdrant vector store.
+        """Ingest articles from SQL database into Qdrant vector store.
 
         Fetches articles in batches, generates embeddings, and upserts them to Qdrant.
         Skips existing articles and logs throughput.

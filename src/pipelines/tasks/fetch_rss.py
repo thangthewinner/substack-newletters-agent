@@ -1,3 +1,4 @@
+"""Fetch Rss."""
 import requests
 from bs4 import BeautifulSoup
 from markdownify import markdownify as md
@@ -24,8 +25,7 @@ def fetch_rss_entries(
     engine: Engine,
     article_model: type[SubstackArticle] = SubstackArticle,
 ) -> list[ArticleItem]:
-    """
-    Fetch all RSS items from a Substack feed and convert them to ArticleItem objects.
+    """Fetch all RSS items from a Substack feed and convert them to ArticleItem objects.
 
     Each task uses its own SQLAlchemy session. Articles already stored in the database
     or with empty links/content are skipped. Errors during parsing individual items
@@ -43,8 +43,8 @@ def fetch_rss_entries(
     Raises:
         RuntimeError: If the RSS fetch fails.
         Exception: For unexpected errors during execution.
-    """
 
+    """
     logger = setup_logging()
     session: Session = init_session(engine)
     items: list[ArticleItem] = []
@@ -80,7 +80,9 @@ def fetch_rss_entries(
                 # Prefer full text in <content:encoded>
                 content_elem = item.find("content:encoded") or item.find("description")
                 raw_html = content_elem.get_text() if content_elem else ""
-                content_md = ""  # init early to avoid UnboundLocalError if raw_html is empty
+                content_md = (
+                    ""  # init early to avoid UnboundLocalError if raw_html is empty
+                )
 
                 # Skip if article contains a self-referencing "Read more" link
                 if raw_html:
@@ -145,24 +147,17 @@ def fetch_rss_entries(
                 )
                 items.append(article_item)
 
-            except Exception as e:
-                logger.error(f"Error processing RSS item for feed '{feed.name}': {e}")
+            except Exception:
+                logger.exception(f"Error processing RSS item for feed '{feed.name}'")
                 continue
 
         logger.info(f"Fetched {len(items)} new articles for feed '{feed.name}'")
         return items
 
-    except Exception as e:
-        logger.error(
-            f"Unexpected error in fetch_rss_entries for feed '{feed.name}': {e}"
-        )
-        raise
     finally:
         session.close()
         logger.info(f"Database session closed for feed '{feed.name}'")
 
-
-# if __name__ == "__main__":
 #     from src.infrastructure.supabase.init_session import init_engine
 
 #     engine = init_engine()

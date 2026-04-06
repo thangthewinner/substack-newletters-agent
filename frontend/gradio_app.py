@@ -1,3 +1,5 @@
+"""Gradio frontend for Substack newsletter search chatbot."""
+
 import os
 import uuid
 from collections.abc import Generator

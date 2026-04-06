@@ -1,8 +1,20 @@
+"""Sql Models."""
 import uuid
+from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import ARRAY, TIMESTAMP, BigInteger, String, Text, func
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy import (
+    ARRAY,
+    TIMESTAMP,
+    BigInteger,
+    Index,
+    Integer,
+    String,
+    Text,
+    func,
+    text,
+)
+from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from src.config import settings
@@ -15,8 +27,7 @@ class Base(DeclarativeBase):
 
 
 class SubstackArticle(Base):
-    """
-    SQLAlchemy model representing a Substack newsletter article.
+    """SQLAlchemy model representing a Substack newsletter article.
 
     Stores article metadata and content fetched from RSS feeds.
     Each article is uniquely identified by its URL and has a generated UUID.
@@ -32,6 +43,7 @@ class SubstackArticle(Base):
         content: Full article content in Markdown format.
         published_at: Publication timestamp.
         created_at: Record creation timestamp (server-set).
+
     """
 
     __tablename__ = settings.supabase_db.table_name
@@ -55,7 +67,41 @@ class SubstackArticle(Base):
     title: Mapped[str] = mapped_column(String, nullable=False)
     url: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    published_at: Mapped[str] = mapped_column(TIMESTAMP, nullable=False)
-    created_at: Mapped[str] = mapped_column(
+    published_at: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP, server_default=func.now(), nullable=False
+    )
+
+
+class ChatSession(Base):
+    """SQLAlchemy model for persistent chat sessions."""
+
+    __tablename__ = "chat_sessions"
+
+    id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+        default=uuid.uuid4,
+    )
+    name: Mapped[str] = mapped_column(String(200), nullable=False, default="New Chat")
+    model: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    messages: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
+    first_message_preview: Mapped[str | None] = mapped_column(
+        String(300), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP, server_default=func.now(), nullable=False
+    )
+    last_message_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP, server_default=func.now(), nullable=False
+    )
+    message_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    __table_args__ = (
+        Index(
+            "idx_chat_sessions_last_message_at",
+            "last_message_at",
+            postgresql_ops={"last_message_at": "DESC"},
+        ),
     )

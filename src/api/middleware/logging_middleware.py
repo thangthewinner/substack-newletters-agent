@@ -1,3 +1,4 @@
+"""Logging Middleware."""
 import time
 
 from fastapi import Request
@@ -9,8 +10,7 @@ logger = setup_logging()
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):
-    """
-    Middleware for logging incoming HTTP requests and their responses.
+    """Middleware for logging incoming HTTP requests and their responses.
 
     Logs the request method, URL, client IP, and headers.
     Excludes sensitive headers like Authorization and Cookie.
@@ -27,8 +27,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
     """
 
     async def dispatch(self, request: Request, call_next):
-        """
-        Process the incoming request, log its details, and measure execution time.
+        """Process the incoming request, log its details, and measure execution time.
 
         Args:
             request (Request): The incoming FastAPI request.
@@ -54,7 +53,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             if k.lower() not in {"authorization", "cookie"}
         }
 
-        logger.info(
+        logger.debug(
             f"Incoming request: {request.method} {request.url} from {client_host} "
             f"headers={safe_headers}"
         )

@@ -1,8 +1,12 @@
+"""Article Models."""
+
 from pydantic import BaseModel, Field, field_validator
 
 
 # Feed Settings
 class FeedItem(BaseModel):
+    """RSS feed item configuration."""
+
     name: str = Field(default="", description="Name of the feed")
     author: str = Field(default="", description="Author of the feed")
     url: str = Field(default="", description="URL of the feed")
@@ -23,6 +27,8 @@ class FeedItem(BaseModel):
 
 # Article settings
 class ArticleItem(BaseModel):
+    """RSS article item with metadata."""
+
     feed_name: str = Field(default="", description="Name of the feed")
     feed_author: str = Field(default="", description="Author of the feed")
     title: str = Field(default="", description="Title of the article")

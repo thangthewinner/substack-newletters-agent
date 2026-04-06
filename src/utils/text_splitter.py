@@ -1,13 +1,13 @@
+"""Text Splitter."""
 from langchain_text_splitters.character import RecursiveCharacterTextSplitter
 
 from src.config import settings
 
 
 class TextSplitter:
-    """
-    Wrapper around LangChain's RecursiveCharacterTextSplitter for splitting
-    Markdown or HTML text into chunks with optional overlap.
+    """Wrapper around LangChain's RecursiveCharacterTextSplitter.
 
+    Splits Markdown or HTML text into chunks with optional overlap.
     Allows custom chunk sizes, overlaps, and separators, falling back
     to settings defaults if not provided.
     """
@@ -18,8 +18,7 @@ class TextSplitter:
         chunk_overlap: int | None = None,
         separators: list[str] | None = None,
     ):
-        """
-        Initialize a TextSplitter instance.
+        r"""Initialize a TextSplitter instance.
 
         Args:
             chunk_size (int | None): Maximum size of each chunk. Defaults to
@@ -58,8 +57,7 @@ class TextSplitter:
         )
 
     def split_text(self, text: str) -> list[str]:
-        """
-        Split the input text into chunks based on configured size, overlap, and separators.
+        """Split the input text into chunks based on configured size, overlap, and separators.
 
         Args:
             text (str): The text to split.

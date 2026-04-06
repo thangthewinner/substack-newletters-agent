@@ -1,8 +1,11 @@
+"""Chat Service."""
+
 from collections.abc import AsyncGenerator
 from typing import Any, Protocol
 
 from langchain.agents import create_agent as create_langchain_agent
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.memory import MemorySaver
 from sqlalchemy.engine import Engine
 
@@ -21,11 +24,13 @@ TOOL_CALL_STEP_TAG = ["seq:step:1"]
 class AgentRunnable(Protocol):
     """Protocol for chat agent invocation and streaming interfaces."""
 
-    async def ainvoke(self, input_data: dict, **kwargs: Any) -> dict: ...
+    async def ainvoke(self, input_data: dict, **kwargs: Any) -> dict:
+        """Invoke the agent asynchronously."""
 
     def astream_events(
         self, input_data: dict, version: str, **kwargs: Any
-    ) -> AsyncGenerator[dict, None]: ...
+    ) -> AsyncGenerator[dict, None]:
+        """Stream events from the agent asynchronously."""
 
 
 def build_lc_messages(
@@ -67,15 +72,18 @@ def create_agent(
     vectorstore: AsyncQdrantVectorStore,
     db_engine: Engine,
     model: str | None = None,
+    checkpointer: BaseCheckpointSaver | None = None,
 ) -> AgentRunnable:
     """Build and return a LangGraph ReAct agent."""
     llm = create_agent_llm(model)
     tools = create_tools(vectorstore, db_engine)
+    if checkpointer is None:
+        checkpointer = MemorySaver()
     return create_langchain_agent(
         llm,
         tools=tools,
         system_prompt=SystemMessage(content=SYSTEM_PROMPT),
-        checkpointer=MemorySaver(),
+        checkpointer=checkpointer,
     )
 
 
@@ -125,7 +133,7 @@ async def run_chat_stream(
 
             if event["event"] == "on_tool_start":
                 tool_name = event.get("name", "tool")
-                yield f"\n> Using tool: `{tool_name}`...\n"
+                yield f"__TOOL_START__:{tool_name}\n"
 
             if (
                 event["event"] == "on_chat_model_stream"
