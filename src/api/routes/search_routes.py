@@ -3,6 +3,7 @@
 import asyncio
 
 from fastapi import APIRouter, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import StreamingResponse
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -30,7 +31,7 @@ limiter = Limiter(key_func=get_remote_address)
 async def _name_and_save(first_message: str, session_id: str, engine) -> None:
     """Generate a session name from the first message and persist it to the DB."""
     name = await generate_session_name(first_message)
-    update_session_name(engine, session_id, name)
+    await run_in_threadpool(update_session_name, engine, session_id, name)
 
 
 @router.post("/unique-titles", response_model=UniqueTitleResponse)
@@ -75,8 +76,8 @@ async def chat(request: Request, body: ChatRequest):
     agent = request.app.state.agent
     engine = request.app.state.db_engine
 
-    msg_count = append_message(
-        engine, body.session_id, "user", body.messages[-1].content
+    msg_count = await run_in_threadpool(
+        append_message, engine, body.session_id, "user", body.messages[-1].content
     )
     if msg_count == 1:
         first_msg = body.messages[-1].content
@@ -84,8 +85,8 @@ async def chat(request: Request, body: ChatRequest):
 
     reply = await run_chat(agent, body.messages, session_id=body.session_id)
 
-    append_message(engine, body.session_id, "assistant", reply)
-    touch_session(engine, body.session_id)
+    await run_in_threadpool(append_message, engine, body.session_id, "assistant", reply)
+    await run_in_threadpool(touch_session, engine, body.session_id)
     return ChatResponse(reply=reply)
 
 
@@ -105,8 +106,8 @@ async def chat_stream(request: Request, body: ChatRequest):
     agent = request.app.state.agent
     engine = request.app.state.db_engine
 
-    msg_count = append_message(
-        engine, body.session_id, "user", body.messages[-1].content
+    msg_count = await run_in_threadpool(
+        append_message, engine, body.session_id, "user", body.messages[-1].content
     )
     if msg_count == 1:
         first_msg = body.messages[-1].content
@@ -121,7 +122,9 @@ async def chat_stream(request: Request, body: ChatRequest):
         ):
             full_reply += chunk
             yield chunk
-        append_message(engine, body.session_id, "assistant", full_reply)
-        touch_session(engine, body.session_id)
+        await run_in_threadpool(
+            append_message, engine, body.session_id, "assistant", full_reply
+        )
+        await run_in_threadpool(touch_session, engine, body.session_id)
 
     return StreamingResponse(generator(), media_type="text/event-stream")
