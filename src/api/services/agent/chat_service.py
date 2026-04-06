@@ -12,7 +12,8 @@ from sqlalchemy.engine import Engine
 from src.api.models.api_models import ChatMessage
 from src.api.services.agent.llm_factory import create_agent_llm
 from src.api.services.agent.prompts.system_prompt import SYSTEM_PROMPT
-from src.api.services.agent.tools import create_tools
+from src.api.services.agent.tools.search_tools import create_search_tools
+from src.api.services.agent.tools.sql_tools import create_sql_tools
 from src.config import settings
 from src.infrastructure.qdrant.qdrant_vectorstore import AsyncQdrantVectorStore
 from src.utils.logger_util import setup_logging
@@ -76,7 +77,9 @@ def create_agent(
 ) -> AgentRunnable:
     """Build and return a LangGraph ReAct agent."""
     llm = create_agent_llm(model)
-    tools = create_tools(vectorstore, db_engine)
+    search_tools = create_search_tools(vectorstore)
+    sql_tools = create_sql_tools(db_engine)
+    tools = [*search_tools, *sql_tools]
     if checkpointer is None:
         checkpointer = MemorySaver()
     return create_langchain_agent(
