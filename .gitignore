@@ -14,3 +14,4 @@ tests/
 plans/
 CLAUDE.md
 .pytest_cache/
+.serena/
