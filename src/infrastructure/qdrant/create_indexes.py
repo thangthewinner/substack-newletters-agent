@@ -1,3 +1,4 @@
+"""Create Indexes."""
 import asyncio
 
 from src.infrastructure.qdrant.qdrant_vectorstore import AsyncQdrantVectorStore
@@ -7,8 +8,7 @@ logger = setup_logging()
 
 
 async def main() -> None:
-    """
-    Create necessary indexes for the Qdrant vector store.
+    """Create necessary indexes for the Qdrant vector store.
 
     Initializes an AsyncQdrantVectorStore and creates HNSW, title, article authors,
     feed author, and feed name indexes. Logs errors and ensures proper execution.

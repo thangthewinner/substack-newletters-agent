@@ -10,3 +10,8 @@ __pycache__/
 .antigravity/
 .cursor/
 docs/
+tests/
+plans/
+CLAUDE.md
+.pytest_cache/
+.serena/

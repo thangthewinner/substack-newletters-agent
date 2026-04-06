@@ -1,3 +1,4 @@
+"""Search Tools."""
 from langchain_core.tools import BaseTool, tool
 
 from src.api.services import search_service
@@ -16,7 +17,9 @@ def create_search_tools(vectorstore: AsyncQdrantVectorStore) -> list[BaseTool]:
         limit: int = 5,
     ) -> list[dict[str, object]]:
         """Search newsletter articles by semantic similarity.
-        Use for general topic or concept queries (e.g. 'AI trends in 2025')."""
+
+        Use for general topic or concept queries (e.g. 'AI trends in 2025').
+        """
         results = await search_service.query_with_filters(
             vectorstore=vectorstore,
             query_text=query,
@@ -34,7 +37,9 @@ def create_search_tools(vectorstore: AsyncQdrantVectorStore) -> list[BaseTool]:
         limit: int = 10,
     ) -> list[dict[str, object]]:
         """Return unique article titles matching a topic.
-        Use when the user wants to discover or list available articles."""
+
+        Use when the user wants to discover or list available articles.
+        """
         results = await search_service.query_unique_titles(
             vectorstore=vectorstore,
             query_text=query,

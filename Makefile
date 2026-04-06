@@ -72,8 +72,15 @@ run-api: ## Run FastAPI application
 	@echo "FastAPI application stopped."
 
 
-## Gradio Commands 
+## Gradio Commands (deprecated, kept for reference)
 run-gradio: ## Run Gradio application
 	@echo "Starting Gradio application..."
-	uv run python -m frontend.app
+	uv run python -m frontend.gradio_app
 	@echo "Gradio application stopped."
+
+
+## Streamlit Commands
+run-streamlit: ## Run Streamlit application
+	@echo "Starting Streamlit application..."
+	uv run streamlit run frontend/streamlit_app.py --server.port 8501
+	@echo "Streamlit application stopped."

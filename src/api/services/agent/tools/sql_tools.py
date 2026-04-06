@@ -1,3 +1,4 @@
+"""Sql Tools."""
 import asyncio
 from datetime import datetime, timedelta
 
@@ -43,9 +44,13 @@ def create_sql_tools(db_engine: Engine) -> list[BaseTool]:
         if feed_name:
             stmt = stmt.where(SubstackArticle.feed_name == feed_name)
         if year is not None:
-            stmt = stmt.where(func.extract("year", SubstackArticle.published_at) == year)
+            stmt = stmt.where(
+                func.extract("year", SubstackArticle.published_at) == year
+            )
         if month is not None:
-            stmt = stmt.where(func.extract("month", SubstackArticle.published_at) == month)
+            stmt = stmt.where(
+                func.extract("month", SubstackArticle.published_at) == month
+            )
         if start_date:
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
             stmt = stmt.where(SubstackArticle.published_at >= start_dt)
@@ -152,8 +157,10 @@ def create_sql_tools(db_engine: Engine) -> list[BaseTool]:
         limit: int = 20,
     ) -> list[dict[str, str]]:
         """List articles by year, month, month+year, or date range.
+
         Use for requests like 'list articles in 2025', 'articles in July 2025',
-        or 'articles from 2025-07-01 to 2025-07-31'."""
+        or 'articles from 2025-07-01 to 2025-07-31'.
+        """
         return await asyncio.to_thread(
             _list_articles_by_period,
             year,
@@ -173,8 +180,10 @@ def create_sql_tools(db_engine: Engine) -> list[BaseTool]:
         feed_name: str | None = None,
     ) -> int:
         """Count articles by year, month, month+year, or date range.
+
         Use for requests like 'how many articles in August', 'in 2025',
-        or 'between two dates'."""
+        or 'between two dates'.
+        """
         return await asyncio.to_thread(
             _count_articles_by_period,
             year,
@@ -191,7 +200,9 @@ def create_sql_tools(db_engine: Engine) -> list[BaseTool]:
         feed_name: str | None = None,
     ) -> list[dict[str, int | str]]:
         """Count articles grouped by month or year.
-        Use when the user asks for trends such as 'count by month in 2025'."""
+
+        Use when the user asks for trends such as 'count by month in 2025'.
+        """
         return await asyncio.to_thread(
             _count_articles_grouped_by_period,
             group_by,

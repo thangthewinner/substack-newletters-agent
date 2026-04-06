@@ -1,5 +1,10 @@
+"""Config."""
+
 import os
 from typing import ClassVar
+
+# Remove conflicting AGENT env var (valid prefix is AGENT__, not AGENT)
+os.environ.pop("AGENT", None)
 
 import yaml
 from pydantic import BaseModel, Field, SecretStr, model_validator
@@ -125,10 +130,9 @@ class HuggingFaceSettings(BaseModel):
 
 # Openai Settings
 class OpenAISettings(BaseModel):
-    """Settings for OpenAI API (currently unused)."""
+    """Settings for OpenAI API."""
 
-    api_key: str | None = Field(default="", description="OpenAI API key")
-    # model: str = Field(default="gpt-4o-mini", description="OpenAI model name")
+    api_key: str = Field(default="", description="OpenAI API key")
 
 
 # OpenRouter Settings
@@ -139,6 +143,20 @@ class OpenRouterSettings(BaseModel):
     api_url: str = Field(
         default="https://openrouter.ai/api/v1", description="OpenRouter API URL"
     )
+
+
+# Groq Settings
+class GroqSettings(BaseModel):
+    """Settings for Groq API access."""
+
+    api_key: str = Field(default="", description="Groq API key")
+
+
+# Anthropic Settings
+class AnthropicSettings(BaseModel):
+    """Settings for Anthropic API access."""
+
+    api_key: str = Field(default="", description="Anthropic API key")
 
 
 # LangSmith Observability Settings
@@ -156,8 +174,12 @@ class AgentSettings(BaseModel):
     """Settings for agent runtime behavior."""
 
     default_model: str = Field(
-        default="nvidia/nemotron-3-super-120b-a12b:free",
-        description="Default OpenRouter model for the chat agent",
+        default="openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+        description="Format: {provider}/{model_name}. Provider: openrouter, groq, openai, anthropic",
+    )
+    naming_model: str = Field(
+        default="groq/llama-3.3-70b-versatile",
+        description="Model used to auto-name sessions",
     )
     temperature: float = Field(default=0.0, description="Sampling temperature")
     max_tokens: int = Field(
@@ -182,8 +204,8 @@ class AgentSettings(BaseModel):
 
 # YAML loader
 def load_yaml_feeds(path: str) -> list[FeedItem]:
-    """
-    Load RSS feed items from a YAML file.
+    """Load RSS feed items from a YAML file.
+
     If the file does not exist or is empty, returns an empty list.
 
     Args:
@@ -191,6 +213,7 @@ def load_yaml_feeds(path: str) -> list[FeedItem]:
 
     Returns:
         list[FeedItem]: List of FeedItem instances loaded from the file.
+
     """
     if not os.path.exists(path):
         return []
@@ -201,6 +224,8 @@ def load_yaml_feeds(path: str) -> list[FeedItem]:
 
 
 class Settings(BaseSettings):
+    """Application settings loaded from environment variables."""
+
     supabase_db: SupabaseDBSettings = Field(default_factory=SupabaseDBSettings)
     qdrant: QdrantSettings = Field(default_factory=QdrantSettings)
     rss: RSSSettings = Field(default_factory=RSSSettings)
@@ -210,6 +235,8 @@ class Settings(BaseSettings):
     hugging_face: HuggingFaceSettings = Field(default_factory=HuggingFaceSettings)
     openai: OpenAISettings = Field(default_factory=OpenAISettings)
     openrouter: OpenRouterSettings = Field(default_factory=OpenRouterSettings)
+    groq: GroqSettings = Field(default_factory=GroqSettings)
+    anthropic: AnthropicSettings = Field(default_factory=AnthropicSettings)
     langsmith: LangSmithSettings = Field(default_factory=LangSmithSettings)
     agent: AgentSettings = Field(default_factory=AgentSettings)
 
@@ -226,21 +253,21 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def load_yaml_rss_feeds(self) -> "Settings":
-        """
-        Load RSS feeds from a YAML file after model initialization.
-        If the file does not exist or is empty, the feeds list remains unchanged.
+        """Load RSS feeds from a YAML file after model initialization.
 
-        Args:
-            self (Settings): The settings instance.
+        If the file does not exist or is empty, the feeds list remains unchanged.
 
         Returns:
             Settings: The updated settings instance.
+
         """
         yaml_feeds = load_yaml_feeds(self.rss_config_yaml_path)
         if yaml_feeds:
             # Use object.__setattr__ + model_copy() to safely update the frozen Settings.
             # Direct attribute assignment on the sub-model violates the frozen=True contract.
-            object.__setattr__(self, "rss", self.rss.model_copy(update={"feeds": yaml_feeds}))
+            object.__setattr__(
+                self, "rss", self.rss.model_copy(update={"feeds": yaml_feeds})
+            )
         return self
 
 

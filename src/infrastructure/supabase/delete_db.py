@@ -1,4 +1,5 @@
-from sqlalchemy import inspect
+"""Delete Db."""
+from sqlalchemy import inspect, text
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.infrastructure.supabase.init_session import init_engine
@@ -51,13 +52,16 @@ def delete_all_tables() -> None:
         # Drop all tables defined in Base.metadata
         logger.info(f"Dropping all tables: {existing_tables}")
         Base.metadata.drop_all(bind=engine)
+        # Drop chat_sessions separately (not tracked by SQLAlchemy Base metadata)
+        with engine.begin() as conn:
+            conn.execute(text("DROP TABLE IF EXISTS chat_sessions CASCADE"))
         logger.info("All tables dropped successfully.")
 
     except SQLAlchemyError as e:
-        logger.error(f"SQLAlchemy error dropping tables: {e}")
+        logger.exception(f"SQLAlchemy error dropping tables: {e}")
         raise SQLAlchemyError("Failed to drop tables from the database") from e
     except Exception as e:
-        logger.error(f"Unexpected error dropping tables: {e}")
+        logger.exception(f"Unexpected error dropping tables: {e}")
         raise
     finally:
         # Dispose of the engine to release connections

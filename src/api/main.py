@@ -1,3 +1,5 @@
+"""Main."""
+
 import os
 from contextlib import asynccontextmanager
 
@@ -5,6 +7,8 @@ import dotenv
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from psycopg_pool import AsyncConnectionPool
 from qdrant_client.http.exceptions import UnexpectedResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -19,13 +23,20 @@ from src.api.middleware.logging_middleware import LoggingMiddleware
 from src.api.routes.health_routes import router as health_router
 from src.api.routes.search_routes import limiter as chat_limiter
 from src.api.routes.search_routes import router as chat_router
+from src.api.routes.session_routes import router as session_router
 from src.api.services.agent.chat_service import create_agent
+from src.config import settings
 from src.infrastructure.qdrant.qdrant_vectorstore import AsyncQdrantVectorStore
 from src.infrastructure.supabase.init_session import init_engine
 from src.utils.logger_util import setup_logging
 
 dotenv.load_dotenv()
 
+langsmith = settings.langsmith
+if langsmith.tracing_v2:
+    os.environ["LANGCHAIN_TRACING_V2"] = "true"
+    os.environ["LANGCHAIN_API_KEY"] = langsmith.api_key
+    os.environ["LANGCHAIN_PROJECT"] = langsmith.project
 
 # Logger setup
 logger = setup_logging()
@@ -34,17 +45,19 @@ logger = setup_logging()
 # Lifespan
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Lifespan context manager to handle startup and shutdown events.
+    """Lifespan context manager to handle startup and shutdown events.
+
     Initializes the Qdrant vector store on startup and ensures proper cleanup on shutdown.
 
     Args:
         app (FastAPI): The FastAPI application instance.
+
     Yields:
         None
 
     Exceptions:
         Raises exceptions if initialization or cleanup fails.
+
     """
     ## Ensure the cache directory exists and is writable (HF downloads the models here)
     cache_dir = "/tmp/fastembed_cache"
@@ -64,10 +77,29 @@ async def lifespan(app: FastAPI):
         # Initialize DB engine once and reuse across requests.
         app.state.db_engine = init_engine()
 
+        # Build async connection pool for psycopg v3 (used by AsyncPostgresSaver)
+        db = settings.supabase_db
+        pg_dsn = f"postgresql://{db.user}:{db.password.get_secret_value()}@{db.host}:{db.port}/{db.name}"
+        pg_pool = AsyncConnectionPool(
+            conninfo=pg_dsn,
+            min_size=1,
+            max_size=5,
+            open=False,
+            kwargs={"autocommit": True, "prepare_threshold": None},
+        )
+        await pg_pool.open()
+        app.state.pg_pool = pg_pool
+
+        # Initialize AsyncPostgresSaver for persistent LangGraph checkpoints
+        checkpointer = AsyncPostgresSaver(pg_pool)
+        await checkpointer.setup()
+        app.state.checkpointer = checkpointer
+
         # Build agent once and reuse across requests.
         app.state.agent = create_agent(
             vectorstore=app.state.vectorstore,
             db_engine=app.state.db_engine,
+            checkpointer=checkpointer,
         )
     except Exception:
         logger.exception("Failed to initialize application state")
@@ -81,6 +113,10 @@ async def lifespan(app: FastAPI):
         app.state.db_engine.dispose()
     except Exception:
         logger.exception("Failed to dispose DB engine")
+    try:
+        await app.state.pg_pool.close()
+    except Exception:
+        logger.exception("Failed to close psycopg pool")
 
 
 # FastAPI application
@@ -126,6 +162,7 @@ app.add_exception_handler(Exception, general_exception_handler)
 
 # Routers
 app.include_router(chat_router, tags=["chat"])
+app.include_router(session_router, tags=["sessions"])
 app.include_router(health_router, tags=["health"])
 
 # For Cloud Run, run the app directly
@@ -139,7 +176,7 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=port,
         log_level="info",
-        reload=True, # Enable auto-reload for development
+        reload=True,  # Enable auto-reload for development
     )
 
     # config = uvicorn.Config(

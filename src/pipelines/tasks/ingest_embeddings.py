@@ -1,3 +1,4 @@
+"""Ingest Embeddings."""
 import gc
 import os
 from datetime import datetime
@@ -19,8 +20,7 @@ dotenv.load_dotenv()
     retry_delay_seconds=120,
 )
 async def ingest_qdrant(from_date: datetime | None = None):
-    """
-    Ingest articles from SQL database into Qdrant vector store.
+    """Ingest articles from SQL database into Qdrant vector store.
 
     Args:
         from_date (datetime | None, optional): Only ingest articles published after this date.

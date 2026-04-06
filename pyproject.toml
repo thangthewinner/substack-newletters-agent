@@ -10,6 +10,7 @@ dependencies = [
     "fastembed>=0.8.0",
     "gradio>=6.10.0",
     "langchain>=1.2.13",
+    "langchain-anthropic>=0.3",
     "langchain-community>=0.4.1",
     "langchain-openai>=1.1.12",
     "langchain-text-splitters>=1.1.1",
@@ -22,7 +23,10 @@ dependencies = [
     "perfect>=0.0.1",
     "prefect>=3.6.23",
     "psutil>=7.2.2",
-    "psycopg2>=2.9.11",
+    "psycopg2-binary>=2.9.11",
+    "psycopg[binary]>=3.2",
+    "psycopg-pool>=3.2",
+    "langgraph-checkpoint-postgres>=2.0",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.13.1",
     "pylint>=4.0.5",
@@ -30,10 +34,24 @@ dependencies = [
     "qdrant-client>=1.17.1",
     "requests>=2.32.5",
     "slowapi>=0.1.9",
+    "streamlit>=1.50",
     "sqlalchemy>=2.0.48",
     "stubs>=1.0.0",
     "uvicorn>=0.42.0",
 ]
 
-[tool.ruff]
+[tool.ruff.lint]
 ignore = ["G004", "F722"]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.20.0",
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.15.9",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]

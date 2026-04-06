@@ -1,3 +1,5 @@
+"""Ingest Rss."""
+
 from prefect import task
 from prefect.cache_policies import NO_CACHE
 from sqlalchemy.engine import Engine
@@ -23,8 +25,7 @@ def ingest_from_rss(
     article_model: type[SubstackArticle],
     engine: Engine,
 ) -> None:
-    """
-    Ingest articles fetched from RSS (already Markdownified).
+    """Ingest articles fetched from RSS (already Markdownified).
 
     Articles are inserted in batches to optimize database writes. Errors during
     ingestion of individual batches are logged but do not stop subsequent batches.
@@ -37,8 +38,8 @@ def ingest_from_rss(
 
     Raises:
         RuntimeError: If ingestion completes with errors.
-    """
 
+    """
     logger = setup_logging()
     rss = settings.rss
     errors = []
@@ -99,7 +100,14 @@ def _persist_batch(
     batch: list[ArticleItem],
     article_model: type[SubstackArticle],
 ) -> None:
-    """Helper to bulk insert a batch of ArticleItems."""
+    """Bulk insert a batch of ArticleItems into the database.
+
+    Args:
+        session: SQLAlchemy database session.
+        batch: List of ArticleItem objects to insert.
+        article_model: SQLAlchemy model class for articles.
+
+    """
     rows = [
         article_model(
             feed_name=article.feed_name,

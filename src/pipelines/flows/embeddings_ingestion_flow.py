@@ -1,3 +1,4 @@
+"""Embeddings Ingestion Flow."""
 import argparse
 import asyncio
 from datetime import UTC, datetime
@@ -13,8 +14,7 @@ from src.utils.logger_util import setup_logging
 
 
 async def get_last_successful_run(flow_name: str) -> datetime | None:
-    """
-    Get the start time of the last successfully completed run for a given flow.
+    """Get the start time of the last successfully completed run for a given flow.
 
     Queries the Prefect API for recent completed runs of the exact flow `flow_name`.
     Returns the start time of the most recent completed run, or None if no runs exist.
@@ -85,8 +85,7 @@ async def get_last_successful_run(flow_name: str) -> datetime | None:
     retry_delay_seconds=120,
 )
 async def qdrant_ingest_flow(from_date: str | None = None) -> None:
-    """
-    Prefect Flow: Orchestrates ingestion of articles from SQL into Qdrant.
+    """Prefect Flow: Orchestrates ingestion of articles from SQL into Qdrant.
 
     Determines the starting cutoff date for ingestion (user-provided, last run date,
     or default fallback) and runs the Qdrant ingestion task.
@@ -114,10 +113,9 @@ async def qdrant_ingest_flow(from_date: str | None = None) -> None:
         else:
             # Fallback to last run date, default_start_date, or 30 days ago
             last_run_date = await get_last_successful_run("qdrant_ingest_flow")
-            from_date_dt = (
-                last_run_date
-                or parser.parse(rss.default_start_date).replace(tzinfo=UTC)
-            )
+            from_date_dt = last_run_date or parser.parse(
+                rss.default_start_date
+            ).replace(tzinfo=UTC)
             logger.info(f"Using fallback from_date: {from_date_dt}")
 
         await ingest_qdrant(from_date=from_date_dt)

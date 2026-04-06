@@ -1,3 +1,4 @@
+"""Exception Handlers."""
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -38,7 +39,6 @@ async def validation_exception_handler(
         content={
             "type": "internal_error",
             "message": "Internal server error",
-            "details": str(exc),
         },
     )
 
@@ -72,7 +72,6 @@ async def qdrant_exception_handler(request: Request, exc: Exception) -> JSONResp
         content={
             "type": "internal_error",
             "message": "Internal server error",
-            "details": str(exc),
         },
     )
 
@@ -94,6 +93,5 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
         content={
             "type": "internal_error",
             "message": "Internal server error",
-            "details": str(exc),
         },
     )
