@@ -13,3 +13,4 @@ docs/
 tests/
 plans/
 CLAUDE.md
+.pytest_cache/
