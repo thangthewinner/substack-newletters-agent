@@ -1,6 +1,8 @@
 """Pydantic models for API request/response schemas."""
 
-from pydantic import BaseModel, Field
+from uuid import UUID
+
+from pydantic import BaseModel, Field, field_validator
 
 
 class SearchResult(BaseModel):
@@ -60,6 +62,13 @@ class ChatRequest(BaseModel):
     session_id: str = Field(
         description="Conversation session ID for server-side memory",
     )
+
+    @field_validator("session_id")
+    @classmethod
+    def validate_session_id(cls, v: str) -> str:
+        """Validate that session_id is a valid UUID format."""
+        UUID(v)  # Raises ValueError if invalid
+        return v
 
 
 class ChatResponse(BaseModel):
