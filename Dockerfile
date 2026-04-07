@@ -52,4 +52,4 @@
     EXPOSE $PORT
     
     # Run FastAPI with uvicorn
-    CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1", "--loop", "uvloop"]
+    CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1"]
