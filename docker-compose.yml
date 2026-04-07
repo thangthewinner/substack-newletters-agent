@@ -1,6 +1,6 @@
 services:
   api:
-    image: ghcr.io/${GITHUB_USER:-thangthewinner}/substack-newletters-agent/api:${IMAGE_TAG:-latest}
+    image: ${API_IMAGE:-ghcr.io/thangthewinner/substack-newletters-agent/api}:${IMAGE_TAG:-latest}
     container_name: substack-api
     restart: unless-stopped
     expose:
@@ -8,11 +8,11 @@ services:
     env_file:
       - .env
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "/app/.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 200s
     networks:
       - internal
     volumes:
@@ -26,7 +26,7 @@ services:
           memory: 512M
 
   streamlit:
-    image: ghcr.io/${GITHUB_USER:-thangthewinner}/substack-newletters-agent/streamlit:${IMAGE_TAG:-latest}
+    image: ${STREAMLIT_IMAGE:-ghcr.io/thangthewinner/substack-newletters-agent/streamlit}:${IMAGE_TAG:-latest}
     container_name: substack-streamlit
     restart: unless-stopped
     ports:
