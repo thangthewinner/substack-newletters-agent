@@ -1,6 +1,6 @@
 services:
   api:
-    image: ghcr.io/${GITHUB_USER:-thangthewinner}/substack-newletters-search/api:${IMAGE_TAG:-latest}
+    image: ghcr.io/${GITHUB_USER:-thangthewinner}/substack-newletters-agent/api:${IMAGE_TAG:-latest}
     container_name: substack-api
     restart: unless-stopped
     expose:
@@ -26,7 +26,7 @@ services:
           memory: 512M
 
   streamlit:
-    image: ghcr.io/${GITHUB_USER:-thangthewinner}/substack-newletters-search/streamlit:${IMAGE_TAG:-latest}
+    image: ghcr.io/${GITHUB_USER:-thangthewinner}/substack-newletters-agent/streamlit:${IMAGE_TAG:-latest}
     container_name: substack-streamlit
     restart: unless-stopped
     ports:
