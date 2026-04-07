@@ -56,7 +56,7 @@ The system flow is:
 
 The current agent is intentionally simple:
 
-- one system prompt
+- One system prompt
 - Qdrant-backed search tools for semantic retrieval
 - SQL-backed tools for metadata and time-based queries
 - LangGraph state persistence through checkpoints
@@ -148,3 +148,7 @@ Main files:
 
 - `docker-compose.yml`
 - `.github/workflows/deploy.yml`
+
+## Licence
+
+This project is licensed under the terms in the [`LICENSE`](LICENSE) file.
