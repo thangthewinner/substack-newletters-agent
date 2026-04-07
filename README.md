@@ -1,28 +1,87 @@
-# Substack Newsletter Chatbot
+# Substack Newsletter Search Agent
 
-This project ingests Substack newsletters from RSS, stores articles in PostgreSQL (Supabase), indexes them in Qdrant, and exposes a chat-first interface powered by a LangGraph agent.
+A simple RAG system for searching and chatting with Substack newsletter content.
 
-## What It Does
+This project ingests newsletter articles from RSS feeds, stores them in PostgreSQL, indexes embeddings in Qdrant, and serves grounded answers through a FastAPI + LangGraph agent with a Streamlit UI.
 
-- Fetches newsletter articles from RSS feeds
-- Stores article metadata and content in PostgreSQL
-- Splits and embeds article content into Qdrant
-- Exposes a FastAPI backend for search and chat
-- Provides a Gradio chatbot UI for interactive exploration
+Inspired by [benitomartin/substack-newsletters-search-course](https://github.com/benitomartin/substack-newsletters-search-course).
 
-## Tech Stack
+## Table of Contents
+
+- [Overview](#overview)
+- [System Architecture](#system-architecture)
+- [Agentic Workflow](#agentic-workflow)
+- [Project Structure](#project-structure)
+- [Quick Start](#quick-start)
+- [Production Deployment](#production-deployment)
+- [Licence](#licence)
+
+## Overview
+
+Substack Newsletter Search Agent helps you:
+
+- ingest Substack RSS feeds into PostgreSQL
+- generate embeddings and index article chunks in Qdrant
+- query newsletter content with semantic search
+- chat with a LangGraph agent over FastAPI
+- use a Streamlit UI for sessions and streaming responses
+
+Core stack:
 
 - Python 3.12+
-- [uv](https://github.com/astral-sh/uv)
 - FastAPI
-- Gradio
-- Prefect
-- Qdrant
+- Streamlit
+- LangGraph / LangChain
 - PostgreSQL / Supabase
-- LangChain / LangGraph
-- OpenRouter
+- Qdrant
+- Prefect
+- uv
 
-## Setup
+## System Architecture
+
+![System Architecture](static/Substack-newletters-agent.drawio.svg)
+
+The system flow is:
+
+1. RSS feeds are fetched and parsed.
+2. Articles are stored in PostgreSQL.
+3. Content is chunked, embedded, and indexed in Qdrant.
+4. Streamlit sends chat requests to FastAPI.
+5. A LangGraph agent uses retrieval and SQL-backed tools to answer with grounded context.
+6. Session state and checkpoints are persisted in PostgreSQL.
+
+## Agentic Workflow
+
+![Agent Graph](static/agent-graph.png)
+
+The current agent is intentionally simple:
+
+- One system prompt
+- Qdrant-backed search tools for semantic retrieval
+- SQL-backed tools for metadata and time-based queries
+- LangGraph state persistence through checkpoints
+
+This keeps the runtime easy to reason about, fast to debug, and good enough for a focused newsletter RAG use case.
+
+## Project Structure
+
+```text
+src/
+├── api/                    # FastAPI app, routes, models, services
+├── infrastructure/         # PostgreSQL and Qdrant integrations
+├── models/                 # Domain and SQLAlchemy models
+├── pipelines/              # RSS ingestion and embedding flows
+└── config.py               # Application settings
+
+frontend/
+└── streamlit_app.py        # Streamlit chat UI
+
+static/
+├── Substack-newletters-agent.drawio.svg
+└── agent-graph.png
+```
+
+## Quick Start
 
 ### 1. Install dependencies
 
@@ -40,59 +99,11 @@ At minimum, configure:
 
 - `SUPABASE_DB__*`
 - `QDRANT__*`
-- `OPENROUTER__API_KEY`
+- one LLM provider key (`OPENROUTER__API_KEY`, `GROQ__API_KEY`, `OPENAI__API_KEY`, or `ANTHROPIC__API_KEY`)
 - `BACKEND_URL`
+- `ALLOWED_ORIGINS`
 
-Optional but useful:
-
-- `LANGCHAIN_API_KEY`
-- `LANGCHAIN_PROJECT`
-- `LANGCHAIN_TRACING_V2`
-
-### 3. Configure RSS feeds
-
-Edit `src/configs/feeds_rss.yaml`.
-
-Example:
-
-```yaml
-feeds:
-  - name: "AI Echoes"
-    author: "Benito Martin"
-    url: "https://aiechoes.substack.com/feed"
-```
-
-## Run the App
-
-### Start the API
-
-```bash
-make run-api
-```
-
-### Start the chatbot UI
-
-```bash
-make run-gradio
-```
-
-By default:
-
-- API: `http://localhost:8080`
-- Gradio UI: `http://localhost:7860`
-
-## API Endpoints
-
-- `GET /`
-- `GET /health`
-- `GET /ready`
-- `POST /unique-titles`
-- `POST /chat`
-- `POST /chat/stream`
-
-## Data Pipeline
-
-### Create storage resources
+### 3. Initialize storage
 
 ```bash
 make supabase-create
@@ -100,48 +111,44 @@ make qdrant-create-collection
 make qdrant-create-index
 ```
 
-### Ingest RSS articles into PostgreSQL
+### 4. Ingest content
 
 ```bash
 make ingest-rss-articles-flow
-```
-
-### Ingest embeddings into Qdrant
-
-```bash
 make ingest-embeddings-flow
 ```
 
-Or from a specific date:
+Optional:
 
 ```bash
 make ingest-embeddings-flow FROM_DATE=2025-01-01
 ```
 
-## Prefect Deployment
-
-### Deploy to Prefect Cloud
+### 5. Run the app
 
 ```bash
-make deploy-cloud-flows
+make run-api
+make run-streamlit
 ```
 
-Notes:
+Default local ports:
 
-- The target work pool must already exist in Prefect Cloud
-- The deployment reads database and Qdrant values from environment variables
+- FastAPI: `http://localhost:8080`
+- Streamlit: `http://localhost:8501`
 
-## Project Structure
+## Production Deployment
 
-```text
-src/
-├── api/              # FastAPI app, routes, request/response models
-├── infrastructure/   # Qdrant and PostgreSQL integrations
-├── models/           # Domain and SQLAlchemy models
-├── pipelines/        # Prefect flows and tasks
-├── utils/            # Shared utilities
-└── config.py         # Application settings
+The recommended deployment flow is:
 
-frontend/
-└── app.py            # Gradio chatbot UI
-```
+1. Build API and Streamlit images with GitHub Actions.
+2. Push SHA-tagged images to GHCR.
+3. Pull and recreate services on the VPS with Docker Compose.
+
+Main files:
+
+- `docker-compose.yml`
+- `.github/workflows/deploy.yml`
+
+## Licence
+
+This project is licensed under the terms in the [`LICENSE`](LICENSE) file.
