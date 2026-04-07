@@ -1,0 +1,46 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.cursor/
+.idea/
+
+# Claude/Agents
+.agents/
+.claude/
+.serena/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Documentation
+docs/
+plans/
+*.md
+!README.md
+
+# Tests
+tests/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
