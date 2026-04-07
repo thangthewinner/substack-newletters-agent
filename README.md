@@ -49,6 +49,7 @@ The system flow is:
 4. Streamlit sends chat requests to FastAPI.
 5. A LangGraph agent uses retrieval and SQL-backed tools to answer with grounded context.
 6. Session state and checkpoints are persisted in PostgreSQL.
+7. Tracing and observability with LangSmith.
 
 ## Agentic Workflow
 
