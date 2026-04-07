@@ -38,7 +38,8 @@ RUN useradd --create-home --shell /bin/bash appuser
 # Copy built application and virtualenv from builder
 COPY --from=builder /app /app
 
-# Set ownership
+# Set working directory and ownership
+WORKDIR /app
 RUN chown -R appuser:appuser /app
 
 # Set Python path and environment variables

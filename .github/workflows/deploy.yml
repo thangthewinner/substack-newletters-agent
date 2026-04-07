@@ -65,14 +65,15 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          envs: IMAGE_TAG,GITHUB_USER
+          envs: IMAGE_TAG,API_IMAGE,STREAMLIT_IMAGE
           script: |
             cd /home/thangnt
 
-            # Pull and restart with SHA tag
+            # Pull and restart with explicit SHA-tagged images
             export IMAGE_TAG=${{ github.sha }}
-            export GITHUB_USER=${{ github.repository_owner }}
+            export API_IMAGE=${{ env.API_IMAGE }}
+            export STREAMLIT_IMAGE=${{ env.STREAMLIT_IMAGE }}
 
-            docker compose pull
-            docker compose up -d --remove-orphans
+            docker compose pull api streamlit
+            docker compose up -d --force-recreate --remove-orphans api streamlit
             docker image prune -f
