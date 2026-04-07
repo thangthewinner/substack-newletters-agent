@@ -1,0 +1,54 @@
+services:
+  api:
+    image: ghcr.io/${GITHUB_USER:-thangthewinner}/substack-newletters-search/api:${IMAGE_TAG:-latest}
+    container_name: substack-api
+    restart: unless-stopped
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - internal
+    volumes:
+      - hf_cache:/tmp/huggingface
+      - fastembed_cache:/tmp/fastembed_cache
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+
+  streamlit:
+    image: ghcr.io/${GITHUB_USER:-thangthewinner}/substack-newletters-search/streamlit:${IMAGE_TAG:-latest}
+    container_name: substack-streamlit
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - internal
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  hf_cache:
+  fastembed_cache:
